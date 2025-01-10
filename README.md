@@ -1,25 +1,24 @@
 # 🚀 Cookiecutter FastAPI Template 🎉
 
-## Configurar e executar 🏃
+## Setup and Run 🏃
 
-Instale o Cookiecutter mais recente se ainda não o tiver instalado (isso requer o Cookiecutter 1.4.0 ou superior):
+Install the latest Cookiecutter if you don't have it already (this requires Cookiecutter 1.4.0 or higher):
 
 ```bash
 pip install -U cookiecutter
 ```
 
-Gere um projeto de pacote Python:
+Generate a Python package project:
 
 ```bash
 cookiecutter https://github.com/hudsonbrendon/cookiecutter-fastapi-template
 ```
 
-# Variáveis
+# Variables
 
-- project_name: Define o nome do projeto;
-- project_slug: Define o nome do diretório principal do projeto e demais referências a ele;
-- project_description: Define a descrição do projeto
-- superuser_email: Define o email do super usuário criado inicialmente no projeto, é usado para realizar o login do usuário na tela do swagger.
-- superuser_password: Define a senha do super usuário criado inicialmente no projeto, é usado para realizar o login do usuário na tela do swagger.
+- project_name: Sets the name of the project;
+- project_slug: Sets the name of the project's main directory and other references to it;
+- project_description: Sets the description of the project
+- superuser_email: Sets the email of the super user initially created in the project, it is used to log the user in on the swagger screen. - superuser_password: Sets the password for the super user initially created in the project. It is used to log the user in on the swagger screen.
 
-## Contribua! 🚀
+## Contribute! 🚀
