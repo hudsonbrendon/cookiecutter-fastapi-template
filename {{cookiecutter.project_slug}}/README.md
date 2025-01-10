@@ -1,6 +1,6 @@
 # 🎉 Backend {{cookiecutter.project_name}} 🎉
 
-## Configurar e executar 🚀
+## Configure and run 🚀
 
 To configure:
 
@@ -25,7 +25,7 @@ docker compose up --build
 - Visit http://localhost:4000/docs to view the interactive API (Swagger) docs. To get the initial superuser username and password to authenticate for the first time, see your **.env** file.
 - Modify your code, which is linked to the _api_ container, and watch uvicorn automatically restart your application when the changes are made.
 
-# Ambiente virtual
+# Virtual environment
 
 Using [pyenv](https://github.com/pyenv/pyenv), install Python 3.11 and create a virtual environment with the command below:
 
