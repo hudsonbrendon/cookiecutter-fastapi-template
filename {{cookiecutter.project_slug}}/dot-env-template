@@ -1,0 +1,33 @@
+# Backend
+SERVER_ENVIROMENT=development # set to production when deploying
+SERVER_NAME={{cookiecutter.project_slug}}
+SERVER_HOST=http://localhost
+
+PROJECT_NAME={{cookiecutter.project_name}}
+
+SECRET_KEY=Vp2Yj9Qw8G7jaSbWFoNHxFxTg93eq4Qh-gbqdmioexc
+
+FIRST_SUPERUSER={{cookiecutter.superuser_email}}
+FIRST_SUPERUSER_PASSWORD={{cookiecutter.superuser_password}}
+
+USERS_OPEN_REGISTRATION=True # set to False to disable open registration
+
+BACKEND_CORS_ORIGINS=["http://localhost", "http://localhost:4000"]
+
+# Postgres (Use these later in your first pgadmin log-on)
+
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=supersecretpassword
+POSTGRES_SERVER=postgres # change to localhost if you are not using docker-compose
+POSTGRES_DB=postgres
+POSTGRES_DB_TEST=dbtest
+
+# Redis
+
+REDIS_HOST=redis://redis:6379/0
+
+# Rate limits
+
+RATE_LIMIT_TIME="1000/minute" # 1000 requests per minute
+
+ACCESS_TOKEN_EXPIRE_MINUTES=100000

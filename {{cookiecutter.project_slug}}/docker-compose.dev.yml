@@ -1,0 +1,39 @@
+services:
+  api:
+    container_name: {{cookiecutter.project_slug}}_api_dev
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    image: {{cookiecutter.project_slug}}_api_dev
+
+    ports:
+      - "4000:80"
+    volumes:
+      - .:/app
+    depends_on:
+      - postgres
+      - redis
+    command: /bin/bash -c "/app/pre-start.sh && uvicorn app.main:app --host 0.0.0.0 --port 80 --reload"
+
+  postgres:
+    container_name: {{cookiecutter.project_slug}}_postgresql_dev
+    image: postgres:16
+
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./pre-start-db-test.sql:/docker-entrypoint-initdb.d/pre-start-db-test.sql
+      - postgres_data:/var/lib/postgresql/data/pgdata
+    env_file:
+      - .env
+    environment:
+      - PGDATA=/var/lib/postgresql/data/pgdata
+
+  redis:
+    container_name: {{cookiecutter.project_slug}}_redis_dev
+    image: redis:latest
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:

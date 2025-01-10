@@ -1,0 +1,12 @@
+[tool.coverage.run]
+omit = [
+    "*/*/__init__.py",
+    "app/tests/*",
+    "app/backend_pre_start.py",
+    "app/api/deps.py",
+    "app/initial_data.py",
+    "app/db/session.py",
+    "app/db/base.py",
+    "app/db/init_db.py",
+    "app/core/config.py",
+]

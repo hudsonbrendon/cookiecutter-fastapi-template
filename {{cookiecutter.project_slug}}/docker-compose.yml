@@ -1,0 +1,37 @@
+services:
+  api:
+    container_name: {{cookiecutter.project_slug}}_api
+    build: .
+    image: {{cookiecutter.project_slug}}_api
+
+    ports:
+      - "4000:80"
+    volumes:
+      - .:/app
+    depends_on:
+      - postgres
+      - redis
+    command: /bin/bash -c "/app/pre-start.sh && uvicorn app.main:app --host 0.0.0.0 --port 80 --reload"
+
+  postgres:
+    container_name: {{cookiecutter.project_slug}}_postgres
+    image: postgres:16
+
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/pgdata
+    env_file:
+      - .env
+    environment:
+      - PGDATA=/var/lib/postgresql/data/pgdata
+
+  redis:
+    container_name: {{cookiecutter.project_slug}}_redis
+    image: redis:latest
+    ports:
+      - "6379:6379"
+
+
+volumes:
+  postgres_data:

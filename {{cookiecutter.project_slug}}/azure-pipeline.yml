@@ -1,0 +1,36 @@
+trigger:
+  branches:
+    include:
+      - SANDBOX
+      - DEV
+      - QA
+      - PPRD
+      - PRD
+
+pool:
+  vmImage: "ubuntu-latest"
+
+steps:
+  - task: SonarCloudPrepare@1
+    inputs:
+      SonarCloud: "Sonar Cloud-BradescoConsorcio"
+      organization: "portaldedocumentos"
+      scannerMode: "CLI"
+      configMode: "manual"
+      cliProjectKey: "portaldedocumentos_$(Build.Repository.Name)"
+      cliProjectName: $(Build.Repository.Name)
+      cliSources: "."
+
+  - task: SonarQubeAnalyze@4
+    displayName: SonarQube Analyze
+    condition: ne(variables['Build.Reason'], 'PullRequest')
+
+  - task: SonarQubePublish@4
+    inputs:
+      pollingTimeoutSec: "300"
+    displayName: SonarQube PublishResults
+    condition: ne(variables['Build.Reason'], 'PullRequest')
+  - task: PublishPipelineArtifact@1
+    inputs:
+      targetPath: "$(Pipeline.Workspace)/s"
+      publishLocation: "pipeline"
