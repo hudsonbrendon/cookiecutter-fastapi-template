@@ -3,68 +3,68 @@
 amqp==5.1.1 # https://github.com/celery/py-amqp 
 annotated-types==0.5.0 # https://github.com/annotated-types/annotated-types
 anyio==3.7.1 # https://pypi.org/project/anyio/
-bcrypt==4.0.1
-billiard==4.1.0
-cachetools==5.3.1
-certifi==2023.5.7
-chardet==5.1.0
-charset-normalizer==3.2.0
-click==8.1.6
-click-didyoumean==0.3.0
-click-plugins==1.1.1
-click-repl==0.3.0
-cssselect==1.2.0
-cssutils==2.7.1
-dnspython==2.4.0
-ecdsa==0.18.0
-email-validator==2.0.0.post2
-emails==0.6
-fastapi==0.100.0
-h11==0.14.0
-httpcore==0.17.3
-httpx==0.24.1
-idna==3.4
-iniconfig==2.0.0
-kombu==5.3.1
-lxml==4.9.3
-Mako==1.2.4
-MarkupSafe==2.1.3
-packaging==23.1
-passlib==1.7.4
-pluggy==1.2.0
-premailer==3.10.0
-prompt-toolkit==3.0.39
-psycopg2-binary==2.9.6
-pyasn1==0.5.0
-pydantic==2.3.0
-pydantic-settings==2.0.2
-pydantic_core==2.6.3
-python-dateutil==2.8.2
-python-dotenv==1.0.0
-python-jose==3.3.0
-python-multipart==0.0.6
-requests==2.31.0
-rsa==4.9
-six==1.16.0
-sniffio==1.3.0
-starlette==0.27.0
-tenacity==8.2.2
-typing_extensions==4.7.1
-tzdata==2023.3
-urllib3==2.0.4
-uvicorn==0.23.1
-vine==5.0.0
-wcwidth==0.2.6
-boto3==1.28.74
-slowapi==0.1.8
+bcrypt==4.0.1 # https://github.com/pyca/bcrypt/
+billiard==4.1.0 # https://github.com/celery/billiard
+cachetools==5.3.1 # https://github.com/tkem/cachetools/
+certifi==2023.5.7 # https://github.com/certifi/python-certifi
+chardet==5.1.0 # https://github.com/chardet/chardet
+charset-normalizer==3.2.0 # https://github.com/jawah/charset_normalizer
+click==8.1.6 # https://github.com/pallets/click
+click-didyoumean==0.3.0 # https://github.com/click-contrib/click-didyoumean
+click-plugins==1.1.1 # https://github.com/click-contrib/click-plugins
+click-repl==0.3.0 # https://github.com/click-contrib/click-repl
+cssselect==1.2.0 # https://github.com/scrapy/cssselect
+cssutils==2.7.1 # https://github.com/jaraco/cssutils
+dnspython==2.4.0 # https://github.com/rthalley/dnspython
+ecdsa==0.18.0 # https://github.com/tlsfuzzer/python-ecdsa
+email-validator==2.0.0.post2 # https://github.com/JoshData/python-email-validator
+emails==0.6 # https://github.com/lavr/python-emails
+fastapi==0.100.0 # https://github.com/fastapi/fastapi
+h11==0.14.0 # https://github.com/python-hyper/h11
+httpcore==0.17.3 # https://github.com/encode/httpcore
+httpx==0.24.1 # https://github.com/encode/httpx
+idna==3.4 # https://github.com/kjd/idna
+iniconfig==2.0.0 # https://github.com/pytest-dev/iniconfig
+kombu==5.3.1 # https://github.com/celery/kombu
+lxml==4.9.3 # https://github.com/lxml/lxml
+Mako==1.2.4 # https://github.com/sqlalchemy/mako
+MarkupSafe==2.1.3 # https://github.com/pallets/markupsafe
+packaging==23.1 # https://github.com/pypa/packaging
+passlib==1.7.4 # https://passlib.readthedocs.io/en/stable/
+pluggy==1.2.0 # https://github.com/pytest-dev/pluggy
+premailer==3.10.0 # https://github.com/peterbe/premailer
+prompt-toolkit==3.0.39 # https://github.com/prompt-toolkit/python-prompt-toolkit
+psycopg2-binary==2.9.6 # https://github.com/psycopg/psycopg2
+pyasn1==0.5.0 # https://github.com/pyasn1/pyasn1
+pydantic==2.3.0 # https://github.com/pydantic/pydantic
+pydantic-settings==2.0.2 # https://github.com/pydantic/pydantic-settings
+pydantic_core==2.6.3 # https://github.com/pydantic/pydantic-core
+python-dateutil==2.8.2 # https://github.com/dateutil/dateutil
+python-dotenv==1.0.0 # https://github.com/theskumar/python-dotenv
+python-jose==3.3.0 # https://github.com/mpdavis/python-jose
+python-multipart==0.0.6 # https://github.com/Kludex/python-multipart
+requests==2.31.0 # https://requests.readthedocs.io/en/latest/
+rsa==4.9 # https://github.com/sybrenstuvel/python-rsa
+six==1.16.0 # https://github.com/benjaminp/six
+sniffio==1.3.0 # https://github.com/python-trio/sniffio
+starlette==0.27.0 # https://github.com/encode/starlette
+tenacity==8.2.2 # https://github.com/jd/tenacity
+typing_extensions==4.7.1 # https://github.com/python/typing_extensions
+tzdata==2023.3 # https://github.com/python/tzdata
+urllib3==2.0.4 # https://github.com/urllib3/urllib3
+uvicorn==0.23.1 # https://github.com/encode/uvicorn
+vine==5.0.0 # https://github.com/celery/vine
+wcwidth==0.2.6 # https://github.com/jquast/wcwidth
+boto3==1.28.74 # https://github.com/boto/boto3
+slowapi==0.1.8 # https://github.com/laurents/slowapi
 
 # Database
 
-alembic==1.11.2
-SQLAlchemy==2.0.19
-SQLAlchemy-Utils==0.41.2
+alembic==1.11.2 # https://github.com/sqlalchemy/alembic/
+SQLAlchemy==2.0.19 # https://github.com/sqlalchemy/sqlalchemy/
+SQLAlchemy-Utils==0.41.2 # https://github.com/kvesteri/sqlalchemy-utils
 
 
 # Redis
 
-redis==5.0.1
+redis==5.0.1 # https://github.com/redis/redis-py
