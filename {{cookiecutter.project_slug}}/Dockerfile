@@ -11,11 +11,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# First copy only requirements.txt to cache dependencies independently
-COPY requirements.txt /app
-RUN pip install --upgrade pip
-RUN pip install --no-cache-dir -r requirements.txt
-
+COPY requirements /app/requirements
+RUN pip install --no-cache-dir -r requirements/production.txt
 
 COPY . /app
 
