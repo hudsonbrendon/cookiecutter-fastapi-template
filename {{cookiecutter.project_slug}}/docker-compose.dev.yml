@@ -13,7 +13,7 @@ services:
     depends_on:
       - postgres
       - redis
-    command: /bin/bash -c "/app/pre-start.sh && uvicorn app.main:app --host 0.0.0.0 --port 80 --reload"
+    command: /bin/bash -c "/app/pre-start.sh && uv run uvicorn app.main:app --host 0.0.0.0 --port 80 --reload"
 
   postgres:
     container_name: {{cookiecutter.project_slug}}_postgresql_dev
