@@ -2,13 +2,13 @@
 
 # Let the DB start
 
-python ./app/backend_pre_start.py
+uv run python ./app/backend_pre_start.py
 
 # Run migrations
 
 
-alembic upgrade head
+uv run alembic upgrade head
 
 
 # Create initial data in DB
-python ./app/initial_data.py
+uv run python ./app/initial_data.py

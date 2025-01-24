@@ -52,7 +52,7 @@ pre-commit install
 If you need to skip the validation step due to some rule in the document, use the following command:
 
 ```bash
-git commit --no-verify -m "chore: skiip pre-commit devido a $seu-motivo-aqui "
+git commit --no-verify -m "chore: skip pre-commit due to $your-reason-here"
 ```
 
 ## Tests
