@@ -2,14 +2,14 @@ version: 2
 updates:
   # GitHub Actions
   - package-ecosystem: github-actions
-    directory: "/{{cookiecutter.project_slug}}"
+    directory: "/{{cookiecutter.project_slug}}/"
     schedule:
       interval: daily
     commit-message:
       prefix: ⬆
   # Python
   - package-ecosystem: pip
-    directory: "/{{cookiecutter.project_slug}}"
+    directory: "/{{cookiecutter.project_slug}}/"
     schedule:
       interval: daily
     commit-message:
