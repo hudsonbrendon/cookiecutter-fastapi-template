@@ -20,7 +20,7 @@ class TestUserAPI:
         self, client: TestClient, superuser_token_headers: Dict[str, str]
     ) -> None:
         r = client.get(
-            f"{settings.API_V1_STR}/usuarios/me",
+            f"{settings.API_V1_STR}/users/me",
             headers=superuser_token_headers,
         )
         current_user = r.json()
@@ -33,7 +33,7 @@ class TestUserAPI:
         self, client: TestClient, normal_user_token_headers: Dict[str, str]
     ) -> None:
         r = client.get(
-            f"{settings.API_V1_STR}/usuarios/me",
+            f"{settings.API_V1_STR}/users/me",
             headers=normal_user_token_headers,
         )
         current_user = r.json()
@@ -53,10 +53,11 @@ class TestUserAPI:
             "cpf": cpf,
             "email": email,
             "phone": phone,
+            "permission": UserPermissionEnum.USER.value,
             "password": password,
         }
         r = client.post(
-            f"{settings.API_V1_STR}/usuarios/",
+            f"{settings.API_V1_STR}/users/",
             headers=superuser_token_headers,
             json=data,
         )
@@ -83,7 +84,7 @@ class TestUserAPI:
         user = crud.user.create(db, obj_in=user_in)
         user_id = user.id
         r = client.get(
-            f"{settings.API_V1_STR}/usuarios/{user_id}",
+            f"{settings.API_V1_STR}/users/{user_id}",
             headers=superuser_token_headers,
         )
         assert 200 <= r.status_code < 300
@@ -106,7 +107,7 @@ class TestUserAPI:
             "password": password,
         }
         r = client.post(
-            f"{settings.API_V1_STR}/usuarios/",
+            f"{settings.API_V1_STR}/users/",
             headers=normal_user_token_headers,
             json=data,
         )
@@ -143,9 +144,7 @@ class TestUserAPI:
         )
         crud.user.create(db, obj_in=user_in2)
 
-        r = client.get(
-            f"{settings.API_V1_STR}/usuarios/", headers=superuser_token_headers
-        )
+        r = client.get(f"{settings.API_V1_STR}/users/", headers=superuser_token_headers)
         all_users = r.json()
 
         assert len(all_users) > 1

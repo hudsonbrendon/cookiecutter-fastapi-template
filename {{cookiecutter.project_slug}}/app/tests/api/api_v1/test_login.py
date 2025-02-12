@@ -45,7 +45,7 @@ class TestLogin:
         }
         r = client.post(f"{settings.API_V1_STR}/login/access-token", data=login_data)
         assert r.status_code == 400
-        assert r.json()["detail"] == "Usuário inativo."
+        assert r.json()["detail"] == "Inactive user."
 
 
 class TestUserMe:
@@ -53,7 +53,7 @@ class TestUserMe:
         self, client: TestClient, superuser_token_headers: Dict[str, str]
     ) -> None:
         r = client.get(
-            f"{settings.API_V1_STR}/usuarios/me",
+            f"{settings.API_V1_STR}/users/me",
             headers=superuser_token_headers,
         )
         current_user = r.json()
@@ -68,7 +68,7 @@ class TestUserMe:
         normal_user_token_headers: Dict[str, str],
     ) -> None:
         r = client.get(
-            f"{settings.API_V1_STR}/usuarios/me",
+            f"{settings.API_V1_STR}/users/me",
             headers=normal_user_token_headers,
         )
         current_user = r.json()
@@ -94,7 +94,7 @@ class TestResetPassword:
             json=data,
         )
         assert r.status_code == 200
-        assert r.json()["msg"] == "Senha alterada com sucesso."
+        assert r.json()["msg"] == "Password changed successfully."
 
     def test_reset_password_with_invalid_password(
         self,
@@ -111,7 +111,7 @@ class TestResetPassword:
             json=data,
         )
         assert r.status_code == 400
-        assert r.json()["detail"] == "Senha atual inválida."
+        assert r.json()["detail"] == "Current password is invalid."
 
     def test_reset_password_with_invalid_token(
         self,
@@ -127,7 +127,7 @@ class TestResetPassword:
             json=data,
         )
         assert r.status_code == 400
-        assert r.json()["detail"] == "Token inválido."
+        assert r.json()["detail"] == "Invalid token."
 
     def test_reset_password_user_not_found(
         self,
@@ -151,7 +151,7 @@ class TestResetPassword:
             json=data,
         )
         assert r.status_code == 404
-        assert r.json()["detail"] == "Usuário não encontrado."
+        assert r.json()["detail"] == "User not found."
 
 
 class TestCreatePassword:
@@ -171,7 +171,7 @@ class TestCreatePassword:
             json=data,
         )
         assert r.status_code == 200
-        assert r.json()["msg"] == "Senha criada com sucesso."
+        assert r.json()["msg"] == "Password created successfully."
 
     def test_create_password_with_invalid_token(
         self,
@@ -186,7 +186,7 @@ class TestCreatePassword:
             json=data,
         )
         assert r.status_code == 400
-        assert r.json()["detail"] == "Token inválido."
+        assert r.json()["detail"] == "Invalid token."
 
     def test_create_password_user_not_found(
         self,
@@ -209,4 +209,4 @@ class TestCreatePassword:
             json=data,
         )
         assert r.status_code == 404
-        assert r.json()["detail"] == "Usuário não encontrado."
+        assert r.json()["detail"] == "User not found."
