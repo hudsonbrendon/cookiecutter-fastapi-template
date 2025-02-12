@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app import crud
 from app.core.config import settings
+from app.core.enums import UserPermissionEnum
 from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate
 from app.tests.utils.utils import random_cpf, random_email, random_lower_string
@@ -25,7 +26,13 @@ def create_random_user(db: Session) -> User:
     email = random_email()
     cpf = random_cpf()
     password = random_lower_string()
-    user_in = UserCreate(username=email, email=email, cpf=cpf, password=password)
+    user_in = UserCreate(
+        username=email,
+        email=email,
+        cpf=cpf,
+        permission=UserPermissionEnum.USER.value,
+        password=password,
+    )
     user = crud.user.create(db=db, obj_in=user_in)
     return user
 
@@ -34,7 +41,7 @@ def authentication_token_from_email(
     *,
     client: TestClient,
     email: str,
-    telefone: str,
+    phone: str,
     cpf: str,
     db: Session,
     is_active: bool = True,
@@ -49,8 +56,9 @@ def authentication_token_from_email(
     if not user:
         user_in_create = UserCreate(
             email=email,
-            telefone=telefone,
             cpf=cpf,
+            phone=phone,
+            permission=UserPermissionEnum.USER.value,
             password=password,
             is_active=is_active,
         )

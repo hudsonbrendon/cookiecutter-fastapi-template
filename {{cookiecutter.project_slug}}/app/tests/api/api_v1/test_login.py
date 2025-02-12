@@ -1,9 +1,9 @@
 from typing import Dict
+
 from fastapi.encoders import jsonable_encoder
+from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from fastapi.testclient import TestClient
-import pytest
 from app import crud
 from app.core.config import settings
 from app.models.user import User
@@ -18,7 +18,7 @@ class TestLogin:
         }
         r = client.post(f"{settings.API_V1_STR}/login/access-token", data=login_data)
         assert r.status_code == 400
-        assert "Usuário ou senha inválidos." in r.text
+        assert "Invalid username or password." in r.text
 
     def test_get_access_token(self, client: TestClient) -> None:
         login_data = {
@@ -151,10 +151,7 @@ class TestResetPassword:
             json=data,
         )
         assert r.status_code == 404
-        assert (
-            r.json()["detail"]
-            == "Usuário não encontrado."
-        )
+        assert r.json()["detail"] == "Usuário não encontrado."
 
 
 class TestCreatePassword:
@@ -212,7 +209,4 @@ class TestCreatePassword:
             json=data,
         )
         assert r.status_code == 404
-        assert (
-            r.json()["detail"]
-            == "Usuário não encontrado."
-        )
+        assert r.json()["detail"] == "Usuário não encontrado."

@@ -5,12 +5,13 @@ from sqlalchemy.orm import Session
 
 from app import crud
 from app.core.config import settings
+from app.core.enums import UserPermissionEnum
 from app.schemas.user import UserCreate
 from app.tests.utils.utils import (
     random_cpf,
     random_email,
     random_lower_string,
-    random_telefone,
+    random_phone,
 )
 
 
@@ -46,12 +47,12 @@ class TestUserAPI:
     ) -> None:
         cpf = random_cpf()
         email = random_email()
-        telefone = random_telefone()
+        phone = random_phone()
         password = random_lower_string()
         data = {
             "cpf": cpf,
             "email": email,
-            "telefone": telefone,
+            "phone": phone,
             "password": password,
         }
         r = client.post(
@@ -70,12 +71,13 @@ class TestUserAPI:
     ) -> None:
         cpf = random_lower_string()
         email = random_email()
-        telefone = random_telefone()
+        phone = random_phone()
         password = random_lower_string()
         user_in = UserCreate(
             cpf=cpf,
             email=email,
-            telefone=telefone,
+            phone=phone,
+            permission=UserPermissionEnum.USER.value,
             password=password,
         )
         user = crud.user.create(db, obj_in=user_in)
@@ -94,13 +96,13 @@ class TestUserAPI:
         self, client: TestClient, normal_user_token_headers: Dict[str, str]
     ) -> None:
         email = random_email()
-        telefone = random_telefone()
+        phone = random_phone()
         password = random_lower_string()
         cpf = random_lower_string()
         data = {
             "cpf": cpf,
             "email": email,
-            "telefone": telefone,
+            "phone": phone,
             "password": password,
         }
         r = client.post(
@@ -115,19 +117,29 @@ class TestUserAPI:
     ) -> None:
         cpf = random_cpf()
         email = random_email()
-        telefone = random_telefone()
+        phone = random_phone()
         password = random_lower_string()
 
-        user_in = UserCreate(email=email, telefone=telefone, cpf=cpf, password=password)
+        user_in = UserCreate(
+            email=email,
+            phone=phone,
+            cpf=cpf,
+            permission=UserPermissionEnum.USER.value,
+            password=password,
+        )
         crud.user.create(db, obj_in=user_in)
 
         cpf2 = random_cpf()
         email2 = random_email()
-        telefone2 = random_telefone()
+        phone2 = random_phone()
         password2 = random_lower_string()
 
         user_in2 = UserCreate(
-            cpf=cpf2, email=email2, telefone=telefone2, password=password2
+            cpf=cpf2,
+            email=email2,
+            phone=phone2,
+            permission=UserPermissionEnum.USER.value,
+            password=password2,
         )
         crud.user.create(db, obj_in=user_in2)
 

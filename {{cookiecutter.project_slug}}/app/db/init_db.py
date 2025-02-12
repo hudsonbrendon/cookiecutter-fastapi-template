@@ -1,10 +1,11 @@
-""" This module is responsible for initializing the database. """
+"""This module is responsible for initializing the database."""
 
 from sqlalchemy.orm import Session
 
 from app import crud, schemas
 from app.core.config import settings
-from app.tests.utils.utils import random_cpf, random_telefone
+from app.core.enums import UserPermissionEnum
+from app.tests.utils.utils import random_cpf, random_phone
 
 
 def init_db(db: Session) -> None:
@@ -19,8 +20,9 @@ def init_db(db: Session) -> None:
     if not user:
         user_in = schemas.UserCreate(
             email=settings.FIRST_SUPERUSER,
-            telefone=random_telefone(),
+            phone=random_phone(),
             cpf=random_cpf(),
+            permission=UserPermissionEnum.ADMINISTRATOR.value,
             password=settings.FIRST_SUPERUSER_PASSWORD,
             is_superuser=True,
         )

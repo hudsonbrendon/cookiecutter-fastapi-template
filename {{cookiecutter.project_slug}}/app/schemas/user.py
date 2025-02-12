@@ -2,12 +2,16 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr
 
+from app.core.enums import UserPermissionEnum
+
 
 class UserBase(BaseModel):
-    nome_completo: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
     email: Optional[EmailStr] = None
     cpf: Optional[str] = None
-    telefone: Optional[str] = None
+    phone: Optional[str] = None
+    permission: UserPermissionEnum
     is_active: Optional[bool] = True
     is_superuser: bool = False
 
@@ -15,7 +19,8 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     cpf: str
     email: EmailStr
-    telefone: str
+    phone: str
+    permission: UserPermissionEnum
     password: str
 
 

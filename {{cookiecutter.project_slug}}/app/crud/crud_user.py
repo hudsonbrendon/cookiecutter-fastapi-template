@@ -1,5 +1,6 @@
 from typing import Any, Dict, Optional, Union
 
+from pydantic import EmailStr
 from sqlalchemy.orm import Session
 
 from app.core.security import get_password_hash, verify_password
@@ -9,25 +10,58 @@ from app.schemas.user import UserCreate, UserUpdate
 
 
 class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
-    """CRUD Usuario."""
+    """The CRUD for User model.
+
+    Args:
+        CRUDBase (_type_): The base CRUD.
+
+    Returns:
+        _type_: The CRUD for User model.
+    """
 
     @staticmethod
-    def get_by_email(db: Session, *, email: str) -> Optional[User]:
-        """Filtre por email."""
+    def get_by_email(db: Session, *, email: EmailStr) -> Optional[User]:
+        """Filter by email.
+
+        Args:
+            db (Session): The database session.
+            email (EmailStr): The email.
+
+        Returns:
+            Optional[User]: The user.
+        """
         return db.query(User).filter(User.email == email).first()
 
     @staticmethod
     def get_by_cpf(db: Session, *, cpf: str) -> Optional[User]:
-        """Filtre por cpf."""
+        """Filter by CPF.
+
+        Args:
+            db (Session): The database session.
+            cpf (str): The CPF.
+
+        Returns:
+            Optional[User]: The user.
+        """
         return db.query(User).filter(User.cpf == cpf).first()
 
     def create(self, db: Session, *, obj_in: UserCreate) -> User:
-        """Criar novo usuário."""
+        """Criar usuário.
+
+        Args:
+            db (Session): The database session.
+            obj_in (UserCreate): The user creation model.
+
+        Returns:
+            User: The user.
+        """
         db_obj = User(
-            nome_completo=obj_in.nome_completo,
+            first_name=obj_in.first_name,
+            last_name=obj_in.last_name,
             cpf=obj_in.cpf,
             email=obj_in.email,
-            telefone=obj_in.telefone,
+            phone=obj_in.phone,
+            permission=obj_in.permission,
             hashed_password=get_password_hash(obj_in.password),
             is_superuser=obj_in.is_superuser,
         )
@@ -39,7 +73,16 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     def update(
         self, db: Session, *, db_obj: User, obj_in: Union[UserUpdate, Dict[str, Any]]
     ) -> User:
-        """Atualizar usuário."""
+        """Update user.
+
+        Args:
+            db (Session): The database session.
+            db_obj (User): The user.
+            obj_in (Union[UserUpdate, Dict[str, Any]]): The user update model.
+
+        Returns:
+            User: The user.
+        """
         if isinstance(obj_in, dict):
             update_data = obj_in
         else:
@@ -51,7 +94,16 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         return super().update(db, db_obj=db_obj, obj_in=update_data)
 
     def authenticate(self, db: Session, *, email: str, password: str) -> Optional[User]:
-        """Autenticar usuário."""
+        """Authenticate user.
+
+        Args:
+            db (Session): The database session.
+            email (str): The email.
+            password (str): The password.
+
+        Returns:
+            Optional[User]: The user.
+        """
         user = self.get_by_email(db, email=email)
         if not user:
             return None
@@ -61,12 +113,26 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
 
     @staticmethod
     def is_active(user: User) -> bool:
-        """Verifica se o usuário está ativo."""
+        """Verify if the user is active.
+
+        Args:
+            user (User): The user.
+
+        Returns:
+            bool: The user is active.
+        """
         return user.is_active
 
     @staticmethod
     def is_superuser(user: User) -> bool:
-        """Verifica se o usuário é superusuário."""
+        """Verify if the user is superuser.
+
+        Args:
+            user (User): The user.
+
+        Returns:
+            bool: The user is superuser.
+        """
         return user.is_superuser
 
 

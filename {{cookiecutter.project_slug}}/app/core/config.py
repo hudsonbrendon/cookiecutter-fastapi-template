@@ -14,7 +14,15 @@ from pydantic import (
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-def is_running_in_docker():
+def is_running_in_docker() -> bool:
+    """Verify if the application is running in a Docker container.
+
+    Raises:
+        ValueError: Unable to verify if the application is running in a Docker container.
+
+    Returns:
+        bool: True if the application is running in a Docker container.
+    """
     if os.environ.get("SERVER_ENVIROMENT", "production") == "production":
         return True
     return os.path.exists("/.dockerenv")
@@ -23,7 +31,6 @@ def is_running_in_docker():
 class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     SECRET_KEY: str = secrets.token_urlsafe(32)
-    # 60 minutes * 24 hours * 8 days = 8 days
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 100000
     SERVER_HOST: AnyHttpUrl
     # BACKEND_CORS_ORIGINS is a JSON-formatted list of origins
@@ -117,7 +124,7 @@ class Settings(BaseSettings):
         )
 
     EMAIL_TEST_USER: EmailStr = "test@email.com"
-    TELEFONE_TEST_USER: str = f"{random.randint(1000000000, 9999999999)}"
+    PHONE_TEST_USER: str = f"{random.randint(1000000000, 9999999999)}"
     CPF_TEST_USER: str = f"{random.randint(1000000000, 9999999999)}"
     FIRST_SUPERUSER: EmailStr
     FIRST_SUPERUSER_PASSWORD: str

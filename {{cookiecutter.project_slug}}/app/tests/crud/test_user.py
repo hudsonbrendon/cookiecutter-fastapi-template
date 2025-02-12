@@ -2,13 +2,14 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
 from app import crud
+from app.core.enums import UserPermissionEnum
 from app.core.security import verify_password
 from app.schemas.user import UserCreate, UserUpdate
 from app.tests.utils.utils import (
     random_cpf,
     random_email,
     random_lower_string,
-    random_telefone,
+    random_phone,
 )
 
 
@@ -16,9 +17,15 @@ class TestCrudUser:
     def test_get_by_email(self, db: Session) -> None:
         email = random_email()
         cpf = random_cpf()
-        telefone = random_telefone()
+        phone = random_phone()
         password = random_lower_string()
-        user_in = UserCreate(cpf=cpf, email=email, telefone=telefone, password=password)
+        user_in = UserCreate(
+            cpf=cpf,
+            email=email,
+            phone=phone,
+            permission=UserPermissionEnum.USER.value,
+            password=password,
+        )
         user = crud.user.create(db, obj_in=user_in)
         user_2 = crud.user.get_by_email(db, email=email)
         assert user_2
@@ -32,9 +39,9 @@ class TestCrudUser:
     def test_get_by_cpf(self, db: Session) -> None:
         cpf = random_cpf()
         email = random_email()
-        telefone = random_telefone()
+        phone = random_phone()
         password = random_lower_string()
-        user_in = UserCreate(cpf=cpf, email=email, telefone=telefone, password=password)
+        user_in = UserCreate(cpf=cpf, email=email, phone=phone, password=password)
         user = crud.user.create(db, obj_in=user_in)
         user_2 = crud.user.get_by_cpf(db, cpf=cpf)
         assert user_2
@@ -42,18 +49,19 @@ class TestCrudUser:
         assert jsonable_encoder(user) == jsonable_encoder(user_2)
 
     def test_get_by_cpf_not_found(self, db: Session) -> None:
-        user = crud.user.get_by_cpf(db, cpf="11111111111")
+        user = crud.user.get_by_cpf(db, cpf="00459324250")
         assert user is None
 
     def test_create_user(self, db: Session) -> None:
         email = random_email()
         cpf = random_cpf()
-        telefone = random_telefone()
+        phone = random_phone()
         password = random_lower_string()
         user_in = UserCreate(
             email=email,
             cpf=cpf,
-            telefone=telefone,
+            phone=phone,
+            permission=UserPermissionEnum.USER.value,
             password=password,
         )
         user = crud.user.create(db, obj_in=user_in)
@@ -63,9 +71,15 @@ class TestCrudUser:
     def test_authenticate_user(self, db: Session) -> None:
         cpf = random_cpf()
         email = random_email()
-        telefone = random_telefone()
+        phone = random_phone()
         password = random_lower_string()
-        user_in = UserCreate(cpf=cpf, email=email, telefone=telefone, password=password)
+        user_in = UserCreate(
+            cpf=cpf,
+            email=email,
+            phone=phone,
+            permission=UserPermissionEnum.USER.value,
+            password=password,
+        )
         user = crud.user.create(db, obj_in=user_in)
         authenticated_user = crud.user.authenticate(db, email=email, password=password)
         assert authenticated_user
@@ -80,9 +94,15 @@ class TestCrudUser:
     def test_check_if_user_is_active(self, db: Session) -> None:
         cpf = random_cpf()
         email = random_email()
-        telefone = random_telefone()
+        phone = random_phone()
         password = random_lower_string()
-        user_in = UserCreate(cpf=cpf, email=email, telefone=telefone, password=password)
+        user_in = UserCreate(
+            cpf=cpf,
+            email=email,
+            phone=phone,
+            permission=UserPermissionEnum.USER.value,
+            password=password,
+        )
         user = crud.user.create(db, obj_in=user_in)
         is_active = crud.user.is_active(user)
         assert is_active is True
@@ -90,12 +110,13 @@ class TestCrudUser:
     def test_check_if_user_is_active_inactive(self, db: Session) -> None:
         cpf = random_cpf()
         email = random_email()
-        telefone = random_telefone()
+        phone = random_phone()
         password = random_lower_string()
         user_in = UserCreate(
             email=email,
-            telefone=telefone,
             cpf=cpf,
+            phone=phone,
+            permission=UserPermissionEnum.USER.value,
             password=password,
             disabled=True,
         )
@@ -106,12 +127,13 @@ class TestCrudUser:
     def test_check_if_user_is_superuser(self, db: Session) -> None:
         cpf = random_cpf()
         email = random_email()
-        telefone = random_telefone()
+        phone = random_phone()
         password = random_lower_string()
         user_in = UserCreate(
             cpf=cpf,
             email=email,
-            telefone=telefone,
+            phone=phone,
+            permission=UserPermissionEnum.USER.value,
             password=password,
             is_superuser=True,
         )
@@ -122,9 +144,15 @@ class TestCrudUser:
     def test_check_if_user_is_superuser_normal_user(self, db: Session) -> None:
         cpf = random_cpf()
         email = random_email()
-        telefone = random_telefone()
+        phone = random_phone()
         password = random_lower_string()
-        user_in = UserCreate(cpf=cpf, email=email, telefone=telefone, password=password)
+        user_in = UserCreate(
+            cpf=cpf,
+            email=email,
+            phone=phone,
+            permission=UserPermissionEnum.USER.value,
+            password=password,
+        )
         user = crud.user.create(db, obj_in=user_in)
         is_superuser = crud.user.is_superuser(user)
         assert is_superuser is False
@@ -132,13 +160,14 @@ class TestCrudUser:
     def test_get_user(self, db: Session) -> None:
         cpf = random_cpf()
         email = random_email()
-        telefone = random_telefone()
+        phone = random_phone()
         password = random_lower_string()
 
         user_in = UserCreate(
             cpf=cpf,
             email=email,
-            telefone=telefone,
+            phone=phone,
+            permission=UserPermissionEnum.USER.value,
             password=password,
             is_superuser=True,
         )
@@ -147,20 +176,21 @@ class TestCrudUser:
         assert user_2
         assert user.cpf == user_2.cpf
         assert user.email == user_2.email
-        assert user.telefone == user_2.telefone
+        assert user.phone == user_2.phone
         assert user.is_superuser == user_2.is_superuser
         assert jsonable_encoder(user) == jsonable_encoder(user_2)
 
     def test_update_user(self, db: Session) -> None:
         cpf = random_cpf()
         email = random_email()
-        telefone = random_telefone()
+        phone = random_phone()
         password = random_lower_string()
 
         user_in = UserCreate(
             email=email,
-            telefone=telefone,
             cpf=cpf,
+            phone=phone,
+            permission=UserPermissionEnum.USER.value,
             is_superuser=True,
             password=password,
         )
@@ -172,6 +202,6 @@ class TestCrudUser:
         assert user_2
         assert user.cpf == user_2.cpf
         assert user.email == user_2.email
-        assert user.telefone == user_2.telefone
+        assert user.phone == user_2.phone
         assert user_2.is_superuser is True
         assert verify_password(new_password, user_2.hashed_password)

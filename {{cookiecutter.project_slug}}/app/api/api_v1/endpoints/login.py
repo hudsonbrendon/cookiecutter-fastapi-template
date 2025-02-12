@@ -1,11 +1,10 @@
-"""Endpoints relacionados a login e token."""
-from slowapi import Limiter
-from slowapi.util import get_remote_address
 from datetime import timedelta
 from typing import Any
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Request
 from fastapi.security import OAuth2PasswordRequestForm
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from sqlalchemy.orm import Session
 
 from app import crud, schemas
@@ -24,23 +23,33 @@ router = APIRouter()
 @router.post("/login/access-token", response_model=schemas.Token)
 @limiter.limit(
     limit_value=settings.RATE_LIMIT_TIME,
-    error_message="Muitas tentativas de login. Tente novamente mais tarde.",
+    error_message="Too many login attempts. Please try again later.",
 )
 def login_access_token(
     request: Request,
     db: Session = Depends(deps.get_db),
     form_data: OAuth2PasswordRequestForm = Depends(),
 ) -> Any:
-    """
-    OAuth2 compatível com login para acesso de token JWT.
+    """Log in and get access token.
+
+    Args:
+        request (Request): The request.
+        db (Session, optional): The session database. Defaults to Depends(deps.get_db).
+        form_data (OAuth2PasswordRequestForm, optional): The form data. Defaults to Depends().
+
+    Raises:
+        HTTPException: Invalid username or password.
+
+    Returns:
+        Any: The access token.
     """
     user = crud.user.authenticate(
         db, email=form_data.username, password=form_data.password
     )
     if not user:
-        raise HTTPException(status_code=400, detail="Usuário ou senha inválidos.")
+        raise HTTPException(status_code=400, detail="Invalid username or password.")
     elif not crud.user.is_active(user):
-        raise HTTPException(status_code=400, detail="Usuário inativo.")
+        raise HTTPException(status_code=400, detail="Inactive user.")
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     return {
         "access_token": security.create_access_token(
@@ -57,33 +66,44 @@ async def reset_password(
     new_password: str = Body(...),
     db: Session = Depends(deps.get_db),
 ) -> Any:
-    """
-    Resetar senha.
+    """Reset password.
+
+    Args:
+        token (str, optional): The token. Defaults to Body(...).
+        old_password (str, optional): The old password. Defaults to Body(...).
+        new_password (str, optional): The new password. Defaults to Body(...).
+        db (Session, optional): The database session. Defaults to Depends(deps.get_db).
+
+    Raises:
+        HTTPException: Invalid token.
+
+    Returns:
+        Any: The message.
     """
     user_id = verify_password_reset_token(token)
     if not user_id:
-        raise HTTPException(status_code=400, detail="Token inválido.")
+        raise HTTPException(status_code=400, detail="Invalid token.")
 
     user = crud.user.get(db, id=user_id)
 
     if not user:
         raise HTTPException(
             status_code=404,
-            detail="Usuário não encontrado.",
+            detail="User not found.",
         )
 
     elif not crud.user.is_active(user):
-        raise HTTPException(status_code=400, detail="Usuário inativo.")
+        raise HTTPException(status_code=400, detail="Inactive user.")
 
     elif not verify_password(old_password, user.hashed_password):
-        raise HTTPException(status_code=400, detail="Senha atual inválida.")
+        raise HTTPException(status_code=400, detail="Current password is invalid.")
 
     hashed_password = get_password_hash(new_password)
     user.hashed_password = hashed_password
     user.primeiro_acesso = False
     db.add(user)
     db.commit()
-    return {"msg": "Senha alterada com sucesso."}
+    return {"msg": "Password changed successfully."}
 
 
 @router.post("/create-password/", response_model=schemas.Msg)
@@ -92,26 +112,36 @@ async def create_password(
     new_password: str = Body(...),
     db: Session = Depends(deps.get_db),
 ) -> Any:
-    """
-    Criar senha.
+    """Create password.
+
+    Args:
+        token (str, optional): _description_. Defaults to Body(...).
+        new_password (str, optional): _description_. Defaults to Body(...).
+        db (Session, optional): The database session. Defaults to Depends(deps.get_db).
+
+    Raises:
+        HTTPException: Invalid token.
+
+    Returns:
+        Any: The message.
     """
     user_id = verify_password_reset_token(token)
     if not user_id:
-        raise HTTPException(status_code=400, detail="Token inválido.")
+        raise HTTPException(status_code=400, detail="Invalid token.")
 
     user = crud.user.get(db, id=user_id)
 
     if not user:
         raise HTTPException(
             status_code=404,
-            detail="Usuário não encontrado.",
+            detail="User not found.",
         )
 
     elif not crud.user.is_active(user):
-        raise HTTPException(status_code=400, detail="Usuário inativo.")
+        raise HTTPException(status_code=400, detail="Inactive user.")
 
     hashed_password = get_password_hash(new_password)
     user.hashed_password = hashed_password
     db.add(user)
     db.commit()
-    return {"msg": "Senha criada com sucesso."}
+    return {"msg": "Password created successfully."}

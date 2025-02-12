@@ -1,4 +1,5 @@
 import random
+import secrets
 import string
 from typing import Dict
 
@@ -31,10 +32,30 @@ def random_email() -> str:
 
 
 def random_cpf() -> str:
-    return f"{random.randint(1000000000, 9999999999)}"
+    cpf = [secrets.randbelow(10) for _ in range(9)]
+
+    # Calcula o primeiro dígito verificador
+    soma = sum([(10 - i) * cpf[i] for i in range(9)])
+    primeiro_digito = (soma * 10) % 11
+    primeiro_digito = 0 if primeiro_digito == 10 else primeiro_digito
+
+    # Adiciona o primeiro dígito verificador ao CPF
+    cpf.append(primeiro_digito)
+
+    # Calcula o segundo dígito verificador
+    soma = sum([(11 - i) * cpf[i] for i in range(10)])
+    segundo_digito = (soma * 10) % 11
+    segundo_digito = 0 if segundo_digito == 10 else segundo_digito
+
+    # Adiciona o segundo dígito verificador ao CPF
+    cpf.append(segundo_digito)
+
+    # Converte a lista de dígitos em uma string formatada
+    cpf_formatado = "".join(map(str, cpf))
+    return cpf_formatado
 
 
-def random_telefone() -> str:
+def random_phone() -> str:
     return f"{random.randint(1000000000, 9999999999)}"
 
 
