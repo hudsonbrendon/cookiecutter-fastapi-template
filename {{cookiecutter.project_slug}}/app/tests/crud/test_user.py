@@ -41,7 +41,13 @@ class TestCrudUser:
         email = random_email()
         phone = random_phone()
         password = random_lower_string()
-        user_in = UserCreate(cpf=cpf, email=email, phone=phone, password=password)
+        user_in = UserCreate(
+            cpf=cpf,
+            email=email,
+            phone=phone,
+            permission=UserPermissionEnum.USER.value,
+            password=password,
+        )
         user = crud.user.create(db, obj_in=user_in)
         user_2 = crud.user.get_by_cpf(db, cpf=cpf)
         assert user_2

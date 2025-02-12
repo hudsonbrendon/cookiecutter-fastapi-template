@@ -11,8 +11,6 @@
   "editor.fontLigatures": true,
   "python.testing.pytestArgs": [
     "app",
-    "-n",
-    "auto"
   ],
   "python.testing.pytestEnabled": true,
   "python.terminal.activateEnvironment": true,
