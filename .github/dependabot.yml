@@ -1,16 +1,27 @@
 version: 2
 updates:
   # GitHub Actions
-  - package-ecosystem: github-actions
-    directory: /{{cookiecutter.project_slug}}
+  - package-ecosystem: "github-actions"
+    directory: "."
     schedule:
-      interval: daily
-    commit-message:
-      prefix: ⬆
+      interval: "daily"
+    labels:
+      - "project infrastructure"
+
+  # Docker
+  - package-ecosystem: "docker"
+    directory: "project_directory"
+    schedule:
+      interval: "daily"
+    labels:
+      - "project infrastructure"
+
   # Python
-  - package-ecosystem: pip
-    directory: /{{cookiecutter.project_slug}}
+  - package-ecosystem: "pip"
+    directory: "project_directory"
     schedule:
-      interval: daily
-    commit-message:
-      prefix: ⬆
+      interval: "daily"
+    labels:
+      - "project infrastructure"
+
+
