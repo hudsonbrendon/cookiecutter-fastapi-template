@@ -2,7 +2,7 @@ version: 2
 updates:
   # GitHub Actions
   - package-ecosystem: github-actions
-    directory: {{cookiecutter.project_slug}}/
+    directory: /
     schedule:
       interval: daily
     commit-message:
