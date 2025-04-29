@@ -25,19 +25,22 @@ docker compose up --build
 - Visit http://localhost:4000/docs to view the interactive API (Swagger) docs. To get the initial superuser username and password to authenticate for the first time, see your **.env** file.
 - Modify your code, which is linked to the _api_ container, and watch uvicorn automatically restart your application when the changes are made.
 
-# Virtual environment
+# Virtual Environment
 
-Using [pyenv](https://github.com/pyenv/pyenv), install Python 3.11 and create a virtual environment with the command below:
 
-```bash
-python3 -m venv venv
-```
 
-With the environment created, activate it with:
+Install dependencies using [uv](https://github.com/astral-sh/uv), a fast Python package installer and resolver:
 
 ```bash
-source venv/bin/activate
+pip install uv
 ```
+And execute for install dependencies and create venv:
+
+```bash
+uv sync
+```
+
+This will install all dependencies from the `requirements.txt` file quickly and efficiently.
 
 # Pre-commit
 
