@@ -82,7 +82,7 @@ def create_user(
 ```python
 # SQLAlchemy model
 class User(Base):
-    __tablename__ = "users"
+    __tablename__ = "usuarios"
     
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)

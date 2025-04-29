@@ -1,13 +1,13 @@
 from enum import Enum
 
 
-class UserPermissionEnum(str, Enum):
-    """The UserPermissionEnum class defines the user permission types.
+class EnumPermissaoUsuario(str, Enum):
+    """A classe EnumPermissaoUsuario define os tipos de permissão do usuário.
 
     Args:
-        str (_type_): The user permission type.
-        Enum (_type_): The user permission enum type.
+        str (_type_): O tipo de permissão do usuário.
+        Enum (_type_): O tipo de enumeração de permissão do usuário.
     """
 
-    ADMINISTRATOR = "Administrator"
-    USER = "User"
+    ADMINISTRADOR = "Administrador"
+    USUARIO = "Usuario"

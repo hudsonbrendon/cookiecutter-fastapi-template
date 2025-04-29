@@ -1,23 +1,23 @@
 import logging
 
-from app.db.init_db import init_db
-from app.db.session import SessionLocal
+from app.db.init_db import iniciar_db
+from app.db.session import SessaoLocal
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def init() -> None:
-    db = SessionLocal()
+def iniciar() -> None:
+    db = SessaoLocal()
 
-    init_db(db)
+    iniciar_db(db)
 
 
-def main() -> None:
+def principal() -> None:
     logger.info("Criando dados iniciais.")
-    init()
+    iniciar()
     logger.info("Dados iniciais criados.")
 
 
 if __name__ == "__main__":
-    main()
+    principal()

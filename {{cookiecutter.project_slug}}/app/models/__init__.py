@@ -1,1 +1,1 @@
-from .user import User  # noqa
+from .user import Usuario  # noqa

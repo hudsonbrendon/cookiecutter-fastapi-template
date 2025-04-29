@@ -2,34 +2,34 @@ from typing import Optional
 
 from pydantic import BaseModel, EmailStr
 
-from app.core.enums import UserPermissionEnum
+from app.core.enums import EnumPermissaoUsuario
 
 
-class User(BaseModel):
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
+class Usuario(BaseModel):
+    primeiro_nome: Optional[str] = None
+    sobrenome: Optional[str] = None
     email: Optional[EmailStr] = None
     cpf: Optional[str] = None
-    phone: Optional[str] = None
-    permission: UserPermissionEnum
-    is_active: Optional[bool] = True
-    is_superuser: bool = False
+    telefone: Optional[str] = None
+    permissao: EnumPermissaoUsuario
+    esta_ativo: Optional[bool] = True
+    eh_superusuario: bool = False
 
 
-class UserCreate(User):
+class CriarUsuario(Usuario):
     cpf: str
     email: EmailStr
-    phone: str
-    permission: UserPermissionEnum
-    password: str
+    telefone: str
+    permissao: EnumPermissaoUsuario
+    senha: str
 
 
-class UserUpdate(BaseModel):
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
+class AtualizarUsuario(BaseModel):
+    primeiro_nome: Optional[str] = None
+    sobrenome: Optional[str] = None
     email: Optional[EmailStr] = None
     cpf: Optional[str] = None
-    phone: Optional[str] = None
-    is_active: Optional[bool] = True
-    is_superuser: bool = False
-    password: Optional[str] = None
+    telefone: Optional[str] = None
+    esta_ativo: Optional[bool] = True
+    eh_superusuario: bool = False
+    senha: Optional[str] = None

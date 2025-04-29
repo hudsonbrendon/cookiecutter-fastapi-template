@@ -2,212 +2,214 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
 from app import crud
-from app.core.enums import UserPermissionEnum
-from app.core.security import verify_password
-from app.schemas.user import UserCreate, UserUpdate
+from app.core.enums import EnumPermissaoUsuario
+from app.core.security import verificar_senha
+from app.schemas.user import AtualizarUsuario, CriarUsuario
 from app.tests.utils.utils import (
-    random_cpf,
-    random_email,
-    random_lower_string,
-    random_phone,
+    cpf_aleatorio,
+    email_aleatorio,
+    telefone_aleatorio,
+    texto_aleatorio_minusculo,
 )
 
 
-class TestCrudUser:
-    def test_get_by_email(self, db: Session) -> None:
-        email = random_email()
-        cpf = random_cpf()
-        phone = random_phone()
-        password = random_lower_string()
-        user_in = UserCreate(
+class TestCrudUsuario:
+    def test_obter_por_email(self, db: Session) -> None:
+        email = email_aleatorio()
+        cpf = cpf_aleatorio()
+        telefone = telefone_aleatorio()
+        senha = texto_aleatorio_minusculo()
+        usuario_in = CriarUsuario(
             cpf=cpf,
             email=email,
-            phone=phone,
-            permission=UserPermissionEnum.USER.value,
-            password=password,
+            telefone=telefone,
+            permissao=EnumPermissaoUsuario.USUARIO.value,
+            senha=senha,
         )
-        user = crud.user.create(db, obj_in=user_in)
-        user_2 = crud.user.get_by_email(db, email=email)
-        assert user_2
-        assert user.email == user_2.email
-        assert jsonable_encoder(user) == jsonable_encoder(user_2)
+        usuario = crud.usuario.criar(db, obj_in=usuario_in)
+        usuario_2 = crud.usuario.obter_por_email(db, email=email)
+        assert usuario_2
+        assert usuario.email == usuario_2.email
+        assert jsonable_encoder(usuario) == jsonable_encoder(usuario_2)
 
-    def test_get_by_email_not_found(self, db: Session) -> None:
-        user = crud.user.get_by_email(db, email="not_found@email.com")
-        assert user is None
+    def test_obter_por_email_nao_encontrado(self, db: Session) -> None:
+        usuario = crud.usuario.obter_por_email(db, email="nao_encontrado@email.com")
+        assert usuario is None
 
-    def test_get_by_cpf(self, db: Session) -> None:
-        cpf = random_cpf()
-        email = random_email()
-        phone = random_phone()
-        password = random_lower_string()
-        user_in = UserCreate(
+    def test_obter_por_cpf(self, db: Session) -> None:
+        cpf = cpf_aleatorio()
+        email = email_aleatorio()
+        telefone = telefone_aleatorio()
+        senha = texto_aleatorio_minusculo()
+        usuario_in = CriarUsuario(
             cpf=cpf,
             email=email,
-            phone=phone,
-            permission=UserPermissionEnum.USER.value,
-            password=password,
+            telefone=telefone,
+            permissao=EnumPermissaoUsuario.USUARIO.value,
+            senha=senha,
         )
-        user = crud.user.create(db, obj_in=user_in)
-        user_2 = crud.user.get_by_cpf(db, cpf=cpf)
-        assert user_2
-        assert user.cpf == user_2.cpf
-        assert jsonable_encoder(user) == jsonable_encoder(user_2)
+        usuario = crud.usuario.criar(db, obj_in=usuario_in)
+        usuario_2 = crud.usuario.obter_por_cpf(db, cpf=cpf)
+        assert usuario_2
+        assert usuario.cpf == usuario_2.cpf
+        assert jsonable_encoder(usuario) == jsonable_encoder(usuario_2)
 
-    def test_get_by_cpf_not_found(self, db: Session) -> None:
-        user = crud.user.get_by_cpf(db, cpf="00459324250")
-        assert user is None
+    def test_obter_por_cpf_nao_encontrado(self, db: Session) -> None:
+        usuario = crud.usuario.obter_por_cpf(db, cpf="00459324250")
+        assert usuario is None
 
-    def test_create_user(self, db: Session) -> None:
-        email = random_email()
-        cpf = random_cpf()
-        phone = random_phone()
-        password = random_lower_string()
-        user_in = UserCreate(
+    def test_criar_usuario(self, db: Session) -> None:
+        email = email_aleatorio()
+        cpf = cpf_aleatorio()
+        telefone = telefone_aleatorio()
+        senha = texto_aleatorio_minusculo()
+        usuario_in = CriarUsuario(
             email=email,
             cpf=cpf,
-            phone=phone,
-            permission=UserPermissionEnum.USER.value,
-            password=password,
+            telefone=telefone,
+            permissao=EnumPermissaoUsuario.USUARIO.value,
+            senha=senha,
         )
-        user = crud.user.create(db, obj_in=user_in)
-        assert user.email == email
-        assert hasattr(user, "hashed_password")
+        usuario = crud.usuario.criar(db, obj_in=usuario_in)
+        assert usuario.email == email
+        assert hasattr(usuario, "senha_criptografada")
 
-    def test_authenticate_user(self, db: Session) -> None:
-        cpf = random_cpf()
-        email = random_email()
-        phone = random_phone()
-        password = random_lower_string()
-        user_in = UserCreate(
+    def test_autenticar_usuario(self, db: Session) -> None:
+        cpf = cpf_aleatorio()
+        email = email_aleatorio()
+        telefone = telefone_aleatorio()
+        senha = texto_aleatorio_minusculo()
+        usuario_in = CriarUsuario(
             cpf=cpf,
             email=email,
-            phone=phone,
-            permission=UserPermissionEnum.USER.value,
-            password=password,
+            telefone=telefone,
+            permissao=EnumPermissaoUsuario.USUARIO.value,
+            senha=senha,
         )
-        user = crud.user.create(db, obj_in=user_in)
-        authenticated_user = crud.user.authenticate(db, email=email, password=password)
-        assert authenticated_user
-        assert user.email == authenticated_user.email
+        usuario = crud.usuario.criar(db, obj_in=usuario_in)
+        usuario_autenticado = crud.usuario.autenticar(db, email=email, senha=senha)
+        assert usuario_autenticado
+        assert usuario.email == usuario_autenticado.email
 
-    def test_not_authenticate_user(self, db: Session) -> None:
-        email = random_email()
-        password = random_lower_string()
-        user = crud.user.authenticate(db, email=email, password=password)
-        assert user is None
+    def test_nao_autenticar_usuario(self, db: Session) -> None:
+        email = email_aleatorio()
+        senha = texto_aleatorio_minusculo()
+        usuario = crud.usuario.autenticar(db, email=email, senha=senha)
+        assert usuario is None
 
-    def test_check_if_user_is_active(self, db: Session) -> None:
-        cpf = random_cpf()
-        email = random_email()
-        phone = random_phone()
-        password = random_lower_string()
-        user_in = UserCreate(
+    def test_verificar_se_usuario_esta_ativo(self, db: Session) -> None:
+        cpf = cpf_aleatorio()
+        email = email_aleatorio()
+        telefone = telefone_aleatorio()
+        senha = texto_aleatorio_minusculo()
+        usuario_in = CriarUsuario(
             cpf=cpf,
             email=email,
-            phone=phone,
-            permission=UserPermissionEnum.USER.value,
-            password=password,
+            telefone=telefone,
+            permissao=EnumPermissaoUsuario.USUARIO.value,
+            senha=senha,
         )
-        user = crud.user.create(db, obj_in=user_in)
-        is_active = crud.user.is_active(user)
-        assert is_active is True
+        usuario = crud.usuario.criar(db, obj_in=usuario_in)
+        esta_ativo = crud.usuario.esta_ativo(usuario)
+        assert esta_ativo is True
 
-    def test_check_if_user_is_active_inactive(self, db: Session) -> None:
-        cpf = random_cpf()
-        email = random_email()
-        phone = random_phone()
-        password = random_lower_string()
-        user_in = UserCreate(
+    def test_verificar_se_usuario_esta_ativo_inativo(self, db: Session) -> None:
+        cpf = cpf_aleatorio()
+        email = email_aleatorio()
+        telefone = telefone_aleatorio()
+        senha = texto_aleatorio_minusculo()
+        usuario_in = CriarUsuario(
             email=email,
             cpf=cpf,
-            phone=phone,
-            permission=UserPermissionEnum.USER.value,
-            password=password,
-            disabled=True,
+            telefone=telefone,
+            permissao=EnumPermissaoUsuario.USUARIO.value,
+            senha=senha,
+            desativado=True,
         )
-        user = crud.user.create(db, obj_in=user_in)
-        is_active = crud.user.is_active(user)
-        assert is_active
+        usuario = crud.usuario.criar(db, obj_in=usuario_in)
+        esta_ativo = crud.usuario.esta_ativo(usuario)
+        assert esta_ativo
 
-    def test_check_if_user_is_superuser(self, db: Session) -> None:
-        cpf = random_cpf()
-        email = random_email()
-        phone = random_phone()
-        password = random_lower_string()
-        user_in = UserCreate(
+    def test_verificar_se_usuario_eh_superusuario(self, db: Session) -> None:
+        cpf = cpf_aleatorio()
+        email = email_aleatorio()
+        telefone = telefone_aleatorio()
+        senha = texto_aleatorio_minusculo()
+        usuario_in = CriarUsuario(
             cpf=cpf,
             email=email,
-            phone=phone,
-            permission=UserPermissionEnum.USER.value,
-            password=password,
-            is_superuser=True,
+            telefone=telefone,
+            permissao=EnumPermissaoUsuario.USUARIO.value,
+            senha=senha,
+            eh_superusuario=True,
         )
-        user = crud.user.create(db, obj_in=user_in)
-        is_superuser = crud.user.is_superuser(user)
-        assert is_superuser is True
+        usuario = crud.usuario.criar(db, obj_in=usuario_in)
+        eh_superusuario = crud.usuario.eh_superusuario(usuario)
+        assert eh_superusuario is True
 
-    def test_check_if_user_is_superuser_normal_user(self, db: Session) -> None:
-        cpf = random_cpf()
-        email = random_email()
-        phone = random_phone()
-        password = random_lower_string()
-        user_in = UserCreate(
+    def test_verificar_se_usuario_eh_superusuario_usuario_normal(
+        self, db: Session
+    ) -> None:
+        cpf = cpf_aleatorio()
+        email = email_aleatorio()
+        telefone = telefone_aleatorio()
+        senha = texto_aleatorio_minusculo()
+        usuario_in = CriarUsuario(
             cpf=cpf,
             email=email,
-            phone=phone,
-            permission=UserPermissionEnum.USER.value,
-            password=password,
+            telefone=telefone,
+            permissao=EnumPermissaoUsuario.USUARIO.value,
+            senha=senha,
         )
-        user = crud.user.create(db, obj_in=user_in)
-        is_superuser = crud.user.is_superuser(user)
-        assert is_superuser is False
+        usuario = crud.usuario.criar(db, obj_in=usuario_in)
+        eh_superusuario = crud.usuario.eh_superusuario(usuario)
+        assert eh_superusuario is False
 
-    def test_get_user(self, db: Session) -> None:
-        cpf = random_cpf()
-        email = random_email()
-        phone = random_phone()
-        password = random_lower_string()
+    def test_obter_usuario(self, db: Session) -> None:
+        cpf = cpf_aleatorio()
+        email = email_aleatorio()
+        telefone = telefone_aleatorio()
+        senha = texto_aleatorio_minusculo()
 
-        user_in = UserCreate(
+        usuario_in = CriarUsuario(
             cpf=cpf,
             email=email,
-            phone=phone,
-            permission=UserPermissionEnum.USER.value,
-            password=password,
-            is_superuser=True,
+            telefone=telefone,
+            permissao=EnumPermissaoUsuario.USUARIO.value,
+            senha=senha,
+            eh_superusuario=True,
         )
-        user = crud.user.create(db, obj_in=user_in)
-        user_2 = crud.user.get(db, id=user.id)
-        assert user_2
-        assert user.cpf == user_2.cpf
-        assert user.email == user_2.email
-        assert user.phone == user_2.phone
-        assert user.is_superuser == user_2.is_superuser
-        assert jsonable_encoder(user) == jsonable_encoder(user_2)
+        usuario = crud.usuario.criar(db, obj_in=usuario_in)
+        usuario_2 = crud.usuario.obter(db, id=usuario.id)
+        assert usuario_2
+        assert usuario.cpf == usuario_2.cpf
+        assert usuario.email == usuario_2.email
+        assert usuario.telefone == usuario_2.telefone
+        assert usuario.eh_superusuario == usuario_2.eh_superusuario
+        assert jsonable_encoder(usuario) == jsonable_encoder(usuario_2)
 
-    def test_update_user(self, db: Session) -> None:
-        cpf = random_cpf()
-        email = random_email()
-        phone = random_phone()
-        password = random_lower_string()
+    def test_atualizar_usuario(self, db: Session) -> None:
+        cpf = cpf_aleatorio()
+        email = email_aleatorio()
+        telefone = telefone_aleatorio()
+        senha = texto_aleatorio_minusculo()
 
-        user_in = UserCreate(
+        usuario_in = CriarUsuario(
             email=email,
             cpf=cpf,
-            phone=phone,
-            permission=UserPermissionEnum.USER.value,
-            is_superuser=True,
-            password=password,
+            telefone=telefone,
+            permissao=EnumPermissaoUsuario.USUARIO.value,
+            eh_superusuario=True,
+            senha=senha,
         )
-        user = crud.user.create(db, obj_in=user_in)
-        new_password = random_lower_string()
-        user_in_update = UserUpdate(password=new_password, is_superuser=True)
-        crud.user.update(db, db_obj=user, obj_in=user_in_update)
-        user_2 = crud.user.get(db, id=user.id)
-        assert user_2
-        assert user.cpf == user_2.cpf
-        assert user.email == user_2.email
-        assert user.phone == user_2.phone
-        assert user_2.is_superuser is True
-        assert verify_password(new_password, user_2.hashed_password)
+        usuario = crud.usuario.criar(db, obj_in=usuario_in)
+        nova_senha = texto_aleatorio_minusculo()
+        usuario_in_update = AtualizarUsuario(senha=nova_senha, eh_superusuario=True)
+        crud.usuario.atualizar(db, db_obj=usuario, obj_in=usuario_in_update)
+        usuario_2 = crud.usuario.obter(db, id=usuario.id)
+        assert usuario_2
+        assert usuario.cpf == usuario_2.cpf
+        assert usuario.email == usuario_2.email
+        assert usuario.telefone == usuario_2.telefone
+        assert usuario_2.eh_superusuario is True
+        assert verificar_senha(nova_senha, usuario_2.senha_criptografada)

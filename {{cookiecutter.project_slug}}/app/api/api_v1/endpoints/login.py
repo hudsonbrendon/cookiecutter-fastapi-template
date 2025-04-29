@@ -10,138 +10,142 @@ from sqlalchemy.orm import Session
 from app import crud, schemas
 from app.api import deps
 from app.core import security
-from app.core.config import settings
-from app.core.security import get_password_hash, verify_password
-from app.utils import verify_password_reset_token
+from app.core.config import configuracoes
+from app.core.security import obter_hash_senha, verificar_senha
+from app.utils import verificar_token_redefinicao_senha
 
-limiter = Limiter(key_func=get_remote_address)
+limitador = Limiter(key_func=get_remote_address)
 
 
 router = APIRouter()
 
 
-@router.post("/login/access-token", response_model=schemas.Token)
-@limiter.limit(
-    limit_value=settings.RATE_LIMIT_TIME,
-    error_message="Too many login attempts. Please try again later.",
+@router.post("/login/token-acesso", response_model=schemas.Token)
+@limitador.limit(
+    limit_value=configuracoes.LIMITE_TAXA_TEMPO,
+    error_message="Muitas tentativas de login. Por favor, tente novamente mais tarde.",
 )
-def login_access_token(
+def login_token_acesso(
     request: Request,
-    db: Session = Depends(deps.get_db),
+    db: Session = Depends(deps.obter_db),
     form_data: OAuth2PasswordRequestForm = Depends(),
 ) -> Any:
-    """Log in and get access token.
+    """Fazer login e obter token de acesso.
 
     Args:
-        request (Request): The request.
-        db (Session, optional): The session database. Defaults to Depends(deps.get_db).
-        form_data (OAuth2PasswordRequestForm, optional): The form data. Defaults to Depends().
+        request (Request): A requisição.
+        db (Session, optional): A sessão do banco de dados. Padrão é Depends(deps.obter_db).
+        form_data (OAuth2PasswordRequestForm, optional): Os dados do formulário. Padrão é Depends().
 
     Raises:
-        HTTPException: Invalid username or password.
+        HTTPException: Nome de usuário ou senha inválidos.
 
     Returns:
-        Any: The access token.
+        Any: O token de acesso.
     """
-    user = crud.user.authenticate(
-        db, email=form_data.username, password=form_data.password
+    usuario = crud.usuario.autenticar(
+        db, email=form_data.username, senha=form_data.password
     )
-    if not user:
-        raise HTTPException(status_code=400, detail="Invalid username or password.")
-    elif not crud.user.is_active(user):
-        raise HTTPException(status_code=400, detail="Inactive user.")
-    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    if not usuario:
+        raise HTTPException(
+            status_code=400, detail="Nome de usuário ou senha inválidos."
+        )
+    elif not crud.usuario.esta_ativo(usuario):
+        raise HTTPException(status_code=400, detail="Usuário inativo.")
+    expiracao_token_acesso = timedelta(
+        minutes=configuracoes.MINUTOS_EXPIRACAO_TOKEN_ACESSO
+    )
     return {
-        "access_token": security.create_access_token(
-            user.id, expires_delta=access_token_expires
+        "token_acesso": security.criar_token_acesso(
+            usuario.id, delta_expiracao=expiracao_token_acesso
         ),
-        "token_type": "bearer",
+        "tipo_token": "bearer",
     }
 
 
-@router.post("/reset-password/", response_model=schemas.Msg)
-async def reset_password(
+@router.post("/redefinir-senha/", response_model=schemas.Mensagem)
+async def redefinir_senha(
     token: str = Body(...),
-    old_password: str = Body(...),
-    new_password: str = Body(...),
-    db: Session = Depends(deps.get_db),
+    senha_antiga: str = Body(...),
+    senha_nova: str = Body(...),
+    db: Session = Depends(deps.obter_db),
 ) -> Any:
-    """Reset password.
+    """Redefinir senha.
 
     Args:
-        token (str, optional): The token. Defaults to Body(...).
-        old_password (str, optional): The old password. Defaults to Body(...).
-        new_password (str, optional): The new password. Defaults to Body(...).
-        db (Session, optional): The database session. Defaults to Depends(deps.get_db).
+        token (str, optional): O token. Padrão é Body(...).
+        senha_antiga (str, optional): A senha antiga. Padrão é Body(...).
+        senha_nova (str, optional): A senha nova. Padrão é Body(...).
+        db (Session, optional): A sessão do banco de dados. Padrão é Depends(deps.obter_db).
 
     Raises:
-        HTTPException: Invalid token.
+        HTTPException: Token inválido.
 
     Returns:
-        Any: The message.
+        Any: A mensagem.
     """
-    user_id = verify_password_reset_token(token)
-    if not user_id:
-        raise HTTPException(status_code=400, detail="Invalid token.")
+    id_usuario = verificar_token_redefinicao_senha(token)
+    if not id_usuario:
+        raise HTTPException(status_code=400, detail="Token inválido.")
 
-    user = crud.user.get(db, id=user_id)
+    usuario = crud.usuario.obter(db, id=id_usuario)
 
-    if not user:
+    if not usuario:
         raise HTTPException(
             status_code=404,
-            detail="User not found.",
+            detail="Usuário não encontrado.",
         )
 
-    elif not crud.user.is_active(user):
-        raise HTTPException(status_code=400, detail="Inactive user.")
+    elif not crud.usuario.esta_ativo(usuario):
+        raise HTTPException(status_code=400, detail="Usuário inativo.")
 
-    elif not verify_password(old_password, user.hashed_password):
-        raise HTTPException(status_code=400, detail="Current password is invalid.")
+    elif not verificar_senha(senha_antiga, usuario.senha_criptografada):
+        raise HTTPException(status_code=400, detail="A senha atual é inválida.")
 
-    hashed_password = get_password_hash(new_password)
-    user.hashed_password = hashed_password
-    user.primeiro_acesso = False
-    db.add(user)
+    hash_senha = obter_hash_senha(senha_nova)
+    usuario.senha_criptografada = hash_senha
+    usuario.primeiro_acesso = False
+    db.add(usuario)
     db.commit()
-    return {"msg": "Password changed successfully."}
+    return {"msg": "Senha alterada com sucesso."}
 
 
-@router.post("/create-password/", response_model=schemas.Msg)
-async def create_password(
+@router.post("/criar-senha/", response_model=schemas.Mensagem)
+async def criar_senha(
     token: str = Body(...),
-    new_password: str = Body(...),
-    db: Session = Depends(deps.get_db),
+    senha_nova: str = Body(...),
+    db: Session = Depends(deps.obter_db),
 ) -> Any:
-    """Create password.
+    """Criar senha.
 
     Args:
-        token (str, optional): _description_. Defaults to Body(...).
-        new_password (str, optional): _description_. Defaults to Body(...).
-        db (Session, optional): The database session. Defaults to Depends(deps.get_db).
+        token (str, optional): O token. Padrão é Body(...).
+        senha_nova (str, optional): A senha nova. Padrão é Body(...).
+        db (Session, optional): A sessão do banco de dados. Padrão é Depends(deps.obter_db).
 
     Raises:
-        HTTPException: Invalid token.
+        HTTPException: Token inválido.
 
     Returns:
-        Any: The message.
+        Any: A mensagem.
     """
-    user_id = verify_password_reset_token(token)
-    if not user_id:
-        raise HTTPException(status_code=400, detail="Invalid token.")
+    id_usuario = verificar_token_redefinicao_senha(token)
+    if not id_usuario:
+        raise HTTPException(status_code=400, detail="Token inválido.")
 
-    user = crud.user.get(db, id=user_id)
+    usuario = crud.usuario.obter(db, id=id_usuario)
 
-    if not user:
+    if not usuario:
         raise HTTPException(
             status_code=404,
-            detail="User not found.",
+            detail="Usuário não encontrado.",
         )
 
-    elif not crud.user.is_active(user):
-        raise HTTPException(status_code=400, detail="Inactive user.")
+    elif not crud.usuario.esta_ativo(usuario):
+        raise HTTPException(status_code=400, detail="Usuário inativo.")
 
-    hashed_password = get_password_hash(new_password)
-    user.hashed_password = hashed_password
-    db.add(user)
+    hash_senha = obter_hash_senha(senha_nova)
+    usuario.senha_criptografada = hash_senha
+    db.add(usuario)
     db.commit()
-    return {"msg": "Password created successfully."}
+    return {"msg": "Senha criada com sucesso."}

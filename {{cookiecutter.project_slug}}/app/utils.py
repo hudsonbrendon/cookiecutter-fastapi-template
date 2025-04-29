@@ -7,106 +7,108 @@ import emails
 from emails.template import JinjaTemplate
 from jose import jwt
 
-from app.core.config import settings
+from app.core.config import configuracoes
 
 
-def send_email(
-    email_to: str,
-    subject_template: str = "",
-    html_template: str = "",
+def enviar_email(
+    email_para: str,
+    modelo_assunto: str = "",
+    modelo_html: str = "",
     environment=None,
 ) -> None:
     if environment is None:
         environment = {}
-    assert (
-        settings.EMAILS_ENABLED
-    ), "Nenhuma configuração fornecida para variáveis de e-mail."
-    message = emails.Message(
-        subject=JinjaTemplate(subject_template),
-        html=JinjaTemplate(html_template),
-        mail_from=(settings.EMAILS_FROM_NAME, settings.EMAILS_FROM_EMAIL),
+    assert configuracoes.EMAILS_HABILITADOS, (
+        "Nenhuma configuração fornecida para variáveis de e-mail."
     )
-    smtp_options = {"host": settings.SMTP_HOST, "port": settings.SMTP_PORT}
-    if settings.SMTP_TLS:
-        smtp_options["tls"] = True
-    if settings.SMTP_USER:
-        smtp_options["user"] = settings.SMTP_USER
-    if settings.SMTP_PASSWORD:
-        smtp_options["password"] = settings.SMTP_PASSWORD
-    response = message.send(to=email_to, render=environment, smtp=smtp_options)
-    logging.info(f"send email result: {response}")
+    mensagem = emails.Message(
+        subject=JinjaTemplate(modelo_assunto),
+        html=JinjaTemplate(modelo_html),
+        mail_from=(configuracoes.EMAILS_DE_NOME, configuracoes.EMAILS_DE_EMAIL),
+    )
+    opcoes_smtp = {"host": configuracoes.HOST_SMTP, "port": configuracoes.PORTA_SMTP}
+    if configuracoes.SMTP_TLS:
+        opcoes_smtp["tls"] = True
+    if configuracoes.USUARIO_SMTP:
+        opcoes_smtp["user"] = configuracoes.USUARIO_SMTP
+    if configuracoes.SENHA_SMTP:
+        opcoes_smtp["password"] = configuracoes.SENHA_SMTP
+    resposta = mensagem.send(to=email_para, render=environment, smtp=opcoes_smtp)
+    logging.info(f"resultado do envio de email: {resposta}")
 
 
-def send_test_email(email_to: str) -> None:
-    project_name = settings.PROJECT_NAME
-    subject = f"{project_name} - Test email"
-    with open(Path(settings.EMAIL_TEMPLATES_DIR) / "test_email.html") as f:
-        template_str = f.read()
-    send_email(
-        email_to=email_to,
-        subject_template=subject,
-        html_template=template_str,
-        environment={"project_name": settings.PROJECT_NAME, "email": email_to},
+def enviar_email_teste(email_para: str) -> None:
+    nome_projeto = configuracoes.NOME_PROJETO
+    assunto = f"{nome_projeto} - Email de teste"
+    with open(Path(configuracoes.DIR_MODELOS_EMAIL) / "test_email.html") as f:
+        modelo_str = f.read()
+    enviar_email(
+        email_para=email_para,
+        modelo_assunto=assunto,
+        modelo_html=modelo_str,
+        environment={"project_name": configuracoes.NOME_PROJETO, "email": email_para},
     )
 
 
-def send_reset_password_email(email_to: str, email: str, token: str) -> None:
-    project_name = settings.PROJECT_NAME
-    subject = f"{project_name} - Password recovery for user {email}"
-    with open(Path(settings.EMAIL_TEMPLATES_DIR) / "reset_password.html") as f:
-        template_str = f.read()
-    server_host = settings.SERVER_HOST
-    link = f"{server_host}/reset-password?token={token}"
-    send_email(
-        email_to=email_to,
-        subject_template=subject,
-        html_template=template_str,
+def enviar_email_redefinicao_senha(email_para: str, email: str, token: str) -> None:
+    nome_projeto = configuracoes.NOME_PROJETO
+    assunto = f"{nome_projeto} - Recuperação de senha para o usuário {email}"
+    with open(Path(configuracoes.DIR_MODELOS_EMAIL) / "reset_password.html") as f:
+        modelo_str = f.read()
+    servidor_host = configuracoes.SERVIDOR_HOST
+    link = f"{servidor_host}/redefinir-senha?token={token}"
+    enviar_email(
+        email_para=email_para,
+        modelo_assunto=assunto,
+        modelo_html=modelo_str,
         environment={
-            "project_name": settings.PROJECT_NAME,
+            "project_name": configuracoes.NOME_PROJETO,
             "username": email,
-            "email": email_to,
-            "valid_hours": settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS,
+            "email": email_para,
+            "valid_hours": configuracoes.HORAS_EXPIRACAO_TOKEN_REDEFINICAO_EMAIL,
             "link": link,
         },
     )
 
 
-def send_new_account_email(email_to: str, username: str, password: str) -> None:
-    project_name = settings.PROJECT_NAME
-    subject = f"{project_name} - Nova conta para usuário {username}"
-    with open(Path(settings.EMAIL_TEMPLATES_DIR) / "new_account.html") as f:
-        template_str = f.read()
-    link = settings.SERVER_HOST
-    send_email(
-        email_to=email_to,
-        subject_template=subject,
-        html_template=template_str,
+def enviar_email_nova_conta(email_para: str, nome_usuario: str, senha: str) -> None:
+    nome_projeto = configuracoes.NOME_PROJETO
+    assunto = f"{nome_projeto} - Nova conta para usuário {nome_usuario}"
+    with open(Path(configuracoes.DIR_MODELOS_EMAIL) / "new_account.html") as f:
+        modelo_str = f.read()
+    link = configuracoes.SERVIDOR_HOST
+    enviar_email(
+        email_para=email_para,
+        modelo_assunto=assunto,
+        modelo_html=modelo_str,
         environment={
-            "project_name": settings.PROJECT_NAME,
-            "username": username,
-            "password": password,
-            "email": email_to,
+            "project_name": configuracoes.NOME_PROJETO,
+            "username": nome_usuario,
+            "password": senha,
+            "email": email_para,
             "link": link,
         },
     )
 
 
-def generate_password_reset_token(email: str) -> str:
-    delta = timedelta(hours=settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS)
-    now = datetime.utcnow()
-    expires = now + delta
-    exp = expires.timestamp()
-    encoded_jwt = jwt.encode(
-        {"exp": exp, "nbf": now, "sub": email},
-        settings.SECRET_KEY,
+def gerar_token_redefinicao_senha(email: str) -> str:
+    delta = timedelta(hours=configuracoes.HORAS_EXPIRACAO_TOKEN_REDEFINICAO_EMAIL)
+    agora = datetime.utcnow()
+    expira = agora + delta
+    exp = expira.timestamp()
+    jwt_codificado = jwt.encode(
+        {"exp": exp, "nbf": agora, "sub": email},
+        configuracoes.CHAVE_SECRETA,
         algorithm="HS256",
     )
-    return encoded_jwt
+    return jwt_codificado
 
 
-def verify_password_reset_token(token: str) -> Optional[str]:
+def verificar_token_redefinicao_senha(token: str) -> Optional[str]:
     try:
-        decoded_token = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
-        return decoded_token["sub"]
+        token_decodificado = jwt.decode(
+            token, configuracoes.CHAVE_SECRETA, algorithms=["HS256"]
+        )
+        return token_decodificado["sub"]
     except jwt.JWTError:
         return None

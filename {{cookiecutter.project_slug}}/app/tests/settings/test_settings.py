@@ -2,14 +2,13 @@ import os
 from io import StringIO
 from typing import Any
 
-from dotenv import load_dotenv
-
-from app.core.config import Settings
+from app.core.config import Configuracoes
 from app.tests.utils.utils import (
-    random_email,
-    random_lower_string,
-    random_url,
+    email_aleatorio,
+    texto_aleatorio_minusculo,
+    url_aleatoria,
 )
+from dotenv import load_dotenv
 
 
 def make_settings(env_items: dict[str, Any]):
@@ -19,65 +18,65 @@ def make_settings(env_items: dict[str, Any]):
         env_file_settings.write(f"{key}={value}\n")
     env_file_settings.seek(0)
     load_dotenv(stream=env_file_settings)
-    return Settings()
+    return Configuracoes()
 
 
-MANDATORY = {
-    "ACCESS_TOKEN_EXPIRE_MINUTES": 30,
-    "FIRST_SUPERUSER_PASSWORD": random_lower_string(),
-    "FIRST_SUPERUSER": random_email(),
-    "POSTGRES_DB": random_lower_string(),
-    "POSTGRES_DB_TEST": random_lower_string(),
-    "POSTGRES_PASSWORD": random_lower_string(),
-    "POSTGRES_SERVER": random_lower_string(),
-    "POSTGRES_USER": random_lower_string(),
-    "PROJECT_NAME": random_lower_string(),
-    "SERVER_HOST": random_url(),
-    "REDIS_HOST": random_url(),
-    "RATE_LIMIT_TIME": "1000/minute",
+OBRIGATORIOS = {
+    "MINUTOS_EXPIRACAO_TOKEN_ACESSO": 30,
+    "SENHA_PRIMEIRO_SUPERUSUARIO": texto_aleatorio_minusculo(),
+    "PRIMEIRO_SUPERUSUARIO": email_aleatorio(),
+    "BD_POSTGRES": texto_aleatorio_minusculo(),
+    "BD_POSTGRES_TESTE": texto_aleatorio_minusculo(),
+    "SENHA_POSTGRES": texto_aleatorio_minusculo(),
+    "SERVIDOR_POSTGRES": texto_aleatorio_minusculo(),
+    "USUARIO_POSTGRES": texto_aleatorio_minusculo(),
+    "NOME_PROJETO": texto_aleatorio_minusculo(),
+    "SERVIDOR_HOST": url_aleatoria(),
+    "HOST_REDIS": url_aleatoria(),
+    "LIMITE_TAXA_TEMPO": "1000/minute",
 }
 
 
 def test_mandatory_and_defaults() -> None:
-    settings = make_settings(MANDATORY)
-    for key, value in MANDATORY.items():
+    settings = make_settings(OBRIGATORIOS)
+    for key, value in OBRIGATORIOS.items():
         assert str(getattr(settings, key)) == str(value)
-    assert settings.ACCESS_TOKEN_EXPIRE_MINUTES == 30
-    assert settings.EMAIL_TEMPLATES_DIR == "/app/app/email-templates/build"
-    assert settings.EMAILS_ENABLED is False
-    assert settings.EMAILS_FROM_EMAIL is None
-    assert settings.EMAILS_FROM_NAME == settings.PROJECT_NAME
-    assert settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS == 48
-    assert settings.EMAIL_TEST_USER == "test@email.com"
-    assert settings.EMAIL_TEMPLATES_DIR == "/app/app/email-templates/build"
-    assert settings.REDIS_HOST == MANDATORY["REDIS_HOST"]
-    assert settings.RATE_LIMIT_TIME == "1000/minute"
+    assert settings.MINUTOS_EXPIRACAO_TOKEN_ACESSO == 30
+    assert settings.DIR_MODELOS_EMAIL == "/app/app/modelos-email/build"
+    assert settings.EMAILS_HABILITADOS is False
+    assert settings.EMAILS_DE_EMAIL is None
+    assert settings.EMAILS_DE_NOME == settings.NOME_PROJETO
+    assert settings.HORAS_EXPIRACAO_TOKEN_REDEFINICAO_EMAIL == 48
+    assert settings.EMAIL_USUARIO_TESTE == "teste@email.com"
+    assert settings.DIR_MODELOS_EMAIL == "/app/app/modelos-email/build"
+    assert settings.HOST_REDIS == OBRIGATORIOS["HOST_REDIS"]
+    assert settings.LIMITE_TAXA_TEMPO == "1000/minute"
 
 
 def test_assemble_db_connection() -> None:
-    settings = make_settings(MANDATORY)
-    assert str(settings.SQLALCHEMY_DATABASE_URI) == (
-        f"postgresql://{settings.POSTGRES_USER}:"
-        f"{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_SERVER}/"
-        f"{settings.POSTGRES_DB}"
+    settings = make_settings(OBRIGATORIOS)
+    assert str(settings.URI_BD_SQLALCHEMY) == (
+        f"postgresql://{settings.USUARIO_POSTGRES}:"
+        f"{settings.SENHA_POSTGRES}@{settings.SERVIDOR_POSTGRES}/"
+        f"{settings.BD_POSTGRES}"
     )
 
 
 def test_assemble_db_test_connection() -> None:
-    settings = make_settings(MANDATORY)
-    assert str(settings.SQLALCHEMY_DATABASE_URI_TEST) == (
-        f"postgresql://{settings.POSTGRES_USER}:"
-        f"{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_SERVER}/"
-        f"{settings.POSTGRES_DB_TEST}"
+    settings = make_settings(OBRIGATORIOS)
+    assert str(settings.URI_BD_SQLALCHEMY_TESTE) == (
+        f"postgresql://{settings.USUARIO_POSTGRES}:"
+        f"{settings.SENHA_POSTGRES}@{settings.SERVIDOR_POSTGRES}/"
+        f"{settings.BD_POSTGRES_TESTE}"
     )
 
 
 def test_backend_cors_origins() -> None:
     settings = make_settings(
-        MANDATORY
-        | {"BACKEND_CORS_ORIGINS": '["http://localhost", "http://localhost:3000"]'}
+        OBRIGATORIOS
+        | {"ORIGENS_CORS_BACKEND": '["http://localhost", "http://localhost:3000"]'}
     )
-    assert [str(item) for item in settings.BACKEND_CORS_ORIGINS] == [
+    assert [str(item) for item in settings.ORIGENS_CORS_BACKEND] == [
         "http://localhost/",
         "http://localhost:3000/",
     ]
@@ -85,11 +84,11 @@ def test_backend_cors_origins() -> None:
 
 def test_email_enabled() -> None:
     settings = make_settings(
-        MANDATORY
+        OBRIGATORIOS
         | {
-            "SMTP_HOST": "www.example.com",
-            "SMTP_PORT": 25,
-            "EMAILS_FROM_EMAIL": random_email(),
+            "HOST_SMTP": "www.example.com",
+            "PORTA_SMTP": 25,
+            "EMAILS_DE_EMAIL": email_aleatorio(),
         }
     )
-    assert settings.EMAILS_ENABLED is True
+    assert settings.EMAILS_HABILITADOS is True

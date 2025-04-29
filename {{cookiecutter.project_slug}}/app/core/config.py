@@ -14,124 +14,124 @@ from pydantic import (
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-def is_running_in_docker() -> bool:
-    """Verify if the application is running in a Docker container.
+def esta_executando_em_docker() -> bool:
+    """Verifica se a aplicação está sendo executada em um container Docker.
 
     Raises:
-        ValueError: Unable to verify if the application is running in a Docker container.
+        ValueError: Não foi possível verificar se a aplicação está sendo executada em um container Docker.
 
     Returns:
-        bool: True if the application is running in a Docker container.
+        bool: True se a aplicação está sendo executada em um container Docker.
     """
-    if os.environ.get("SERVER_ENVIROMENT", "production") == "production":
+    if os.environ.get("AMBIENTE_SERVIDOR", "producao") == "producao":
         return True
     return os.path.exists("/.dockerenv")
 
 
-class Settings(BaseSettings):
+class Configuracoes(BaseSettings):
     API_V1_STR: str = "/api/v1"
-    SECRET_KEY: str = secrets.token_urlsafe(32)
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 100000
-    SERVER_HOST: AnyHttpUrl
-    # BACKEND_CORS_ORIGINS is a JSON-formatted list of origins
-    # e.g: '["http://localhost", "http://localhost:4200", "http://localhost:3000", \
+    CHAVE_SECRETA: str = secrets.token_urlsafe(32)
+    MINUTOS_EXPIRACAO_TOKEN_ACESSO: int = 100000
+    SERVIDOR_HOST: AnyHttpUrl
+    # ORIGENS_CORS_BACKEND é uma lista formatada em JSON de origens
+    # ex: '["http://localhost", "http://localhost:4200", "http://localhost:3000", \
     # "http://localhost:8080", "http://local.dockertoolbox.tiangolo.com"]'
-    BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
+    ORIGENS_CORS_BACKEND: List[AnyHttpUrl] = []
 
-    @field_validator("BACKEND_CORS_ORIGINS", mode="before")
+    @field_validator("ORIGENS_CORS_BACKEND", mode="before")
     @classmethod
-    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
+    def montar_origens_cors(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
         if isinstance(v, str) and not v.startswith("["):
             return [i.strip() for i in v.split(",")]
         elif isinstance(v, (list, str)):
             return v
         raise ValueError(v)
 
-    PROJECT_NAME: str
+    NOME_PROJETO: str
 
-    POSTGRES_SERVER: str
-    POSTGRES_USER: str
-    POSTGRES_PASSWORD: str
-    POSTGRES_DB: str
-    POSTGRES_DB_TEST: Optional[str] = None
-    SQLALCHEMY_DATABASE_URI: Optional[PostgresDsn] = None
-    SQLALCHEMY_DATABASE_URI_TEST: Optional[PostgresDsn] = None
-    REDIS_HOST: str
-    RATE_LIMIT_TIME: Optional[str] = "1000/minute"
+    SERVIDOR_POSTGRES: str
+    USUARIO_POSTGRES: str
+    SENHA_POSTGRES: str
+    BD_POSTGRES: str
+    BD_POSTGRES_TESTE: Optional[str] = None
+    URI_BD_SQLALCHEMY: Optional[PostgresDsn] = None
+    URI_BD_SQLALCHEMY_TESTE: Optional[PostgresDsn] = None
+    HOST_REDIS: str
+    LIMITE_TAXA_TEMPO: Optional[str] = "1000/minute"
 
-    @field_validator("SQLALCHEMY_DATABASE_URI", mode="before")
+    @field_validator("URI_BD_SQLALCHEMY", mode="before")
     @classmethod
-    def assemble_db_connection(cls, v: Optional[str], info: ValidationInfo) -> Any:
+    def montar_conexao_bd(cls, v: Optional[str], info: ValidationInfo) -> Any:
         if isinstance(v, str):
             return v
-        user = info.data.get("POSTGRES_USER")
-        password = info.data.get("POSTGRES_PASSWORD")
-        if is_running_in_docker():
-            host = info.data.get("POSTGRES_SERVER")
+        usuario = info.data.get("USUARIO_POSTGRES")
+        senha = info.data.get("SENHA_POSTGRES")
+        if esta_executando_em_docker():
+            host = info.data.get("SERVIDOR_POSTGRES")
         else:
             host = "localhost"
-        db = info.data.get("POSTGRES_DB")
+        bd = info.data.get("BD_POSTGRES")
 
-        if all([user, password, host, db]):
-            return f"postgresql://{user}:{password}@{host}/{db}"
+        if all([usuario, senha, host, bd]):
+            return f"postgresql://{usuario}:{senha}@{host}/{bd}"
         else:
             return None
 
-    @field_validator("SQLALCHEMY_DATABASE_URI_TEST", mode="before")
+    @field_validator("URI_BD_SQLALCHEMY_TESTE", mode="before")
     @classmethod
-    def assemble_db_connection_test(cls, v: Optional[str], info: ValidationInfo) -> Any:
+    def montar_conexao_bd_teste(cls, v: Optional[str], info: ValidationInfo) -> Any:
         if isinstance(v, str):
             return v
-        user = info.data.get("POSTGRES_USER")
-        password = info.data.get("POSTGRES_PASSWORD")
+        usuario = info.data.get("USUARIO_POSTGRES")
+        senha = info.data.get("SENHA_POSTGRES")
 
-        if is_running_in_docker():
-            host = info.data.get("POSTGRES_SERVER")
+        if esta_executando_em_docker():
+            host = info.data.get("SERVIDOR_POSTGRES")
         else:
             host = "localhost"
-        db = info.data.get("POSTGRES_DB_TEST")
-        if all([user, password, host, db]):
-            return f"postgresql://{user}:{password}@{host}/{db}"
+        bd = info.data.get("BD_POSTGRES_TESTE")
+        if all([usuario, senha, host, bd]):
+            return f"postgresql://{usuario}:{senha}@{host}/{bd}"
         else:
             return None
 
     SMTP_TLS: bool = True
-    SMTP_PORT: Optional[int] = None
-    SMTP_HOST: Optional[str] = None
-    SMTP_USER: Optional[str] = None
-    SMTP_PASSWORD: Optional[str] = None
-    EMAILS_FROM_EMAIL: Optional[EmailStr] = None
-    EMAILS_FROM_NAME: Optional[str] = None
+    PORTA_SMTP: Optional[int] = None
+    HOST_SMTP: Optional[str] = None
+    USUARIO_SMTP: Optional[str] = None
+    SENHA_SMTP: Optional[str] = None
+    EMAILS_DE_EMAIL: Optional[EmailStr] = None
+    EMAILS_DE_NOME: Optional[str] = None
 
-    @field_validator("EMAILS_FROM_NAME", mode="before")
+    @field_validator("EMAILS_DE_NOME", mode="before")
     @classmethod
-    def get_project_name(cls, v: Optional[str], info: ValidationInfo) -> str:
+    def obter_nome_projeto(cls, v: Optional[str], info: ValidationInfo) -> str:
         if not v:
-            return info.data.get("PROJECT_NAME")
+            return info.data.get("NOME_PROJETO")
         return v
 
-    EMAIL_RESET_TOKEN_EXPIRE_HOURS: int = 48
-    EMAIL_TEMPLATES_DIR: str = "/app/app/email-templates/build"
-    EMAILS_ENABLED: bool = False
+    HORAS_EXPIRACAO_TOKEN_REDEFINICAO_EMAIL: int = 48
+    DIR_MODELOS_EMAIL: str = "/app/app/modelos-email/build"
+    EMAILS_HABILITADOS: bool = False
 
-    @field_validator("EMAILS_ENABLED", mode="before")
+    @field_validator("EMAILS_HABILITADOS", mode="before")
     @classmethod
-    def get_emails_enabled(cls, v: bool, info: ValidationInfo) -> bool:
+    def obter_emails_habilitados(cls, v: bool, info: ValidationInfo) -> bool:
         return bool(
-            info.data.get("SMTP_HOST")
-            and info.data.get("SMTP_PORT")
-            and info.data.get("EMAILS_FROM_EMAIL")
+            info.data.get("HOST_SMTP")
+            and info.data.get("PORTA_SMTP")
+            and info.data.get("EMAILS_DE_EMAIL")
         )
 
-    EMAIL_TEST_USER: EmailStr = "test@email.com"
-    PHONE_TEST_USER: str = f"{random.randint(1000000000, 9999999999)}"
-    CPF_TEST_USER: str = f"{random.randint(1000000000, 9999999999)}"
-    FIRST_SUPERUSER: EmailStr
-    FIRST_SUPERUSER_PASSWORD: str
-    USERS_OPEN_REGISTRATION: bool = False
+    EMAIL_USUARIO_TESTE: EmailStr = "teste@email.com"
+    TELEFONE_USUARIO_TESTE: str = f"{random.randint(1000000000, 9999999999)}"
+    CPF_USUARIO_TESTE: str = f"{random.randint(1000000000, 9999999999)}"
+    PRIMEIRO_SUPERUSUARIO: EmailStr
+    SENHA_PRIMEIRO_SUPERUSUARIO: str
+    REGISTRO_USUARIOS_ABERTO: bool = False
 
     model_config = SettingsConfigDict(case_sensitive=True)
 
 
 load_dotenv()
-settings = Settings()
+configuracoes = Configuracoes()

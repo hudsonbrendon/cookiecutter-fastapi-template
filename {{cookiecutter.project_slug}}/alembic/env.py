@@ -3,10 +3,9 @@ from __future__ import with_statement
 import os
 from logging.config import fileConfig
 
+from alembic import context
 from dotenv import load_dotenv
 from sqlalchemy import engine_from_config, pool
-
-from alembic import context
 
 load_dotenv()
 
@@ -27,7 +26,6 @@ fileConfig(config.config_file_name)
 
 # To run the migrations locally, uncomment the following lines
 # import sys
-# sys.path.append("/Users/joaovitor/Documents/Projects/Consorcio-AS-IS/app")
 # from db.base_class import Base
 
 from app.db.base import Base  # noqa
@@ -41,10 +39,10 @@ target_metadata = Base.metadata
 
 
 def get_url():
-    user = os.getenv("POSTGRES_USER", "postgres")
-    password = os.getenv("POSTGRES_PASSWORD", "")
-    server = os.getenv("POSTGRES_SERVER", "db")
-    db = os.getenv("POSTGRES_DB", "app")
+    user = os.getenv("USUARIO_POSTGRES", "postgres")
+    password = os.getenv("SENHA_POSTGRES", "")
+    server = os.getenv("SERVIDOR_POSTGRES", "db")
+    db = os.getenv("BD_POSTGRES", "app")
 
     return f"postgresql://{user}:{password}@{server}/{db}"
 

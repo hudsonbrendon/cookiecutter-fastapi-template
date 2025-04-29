@@ -7,252 +7,252 @@ from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
 from app.api import deps
-from app.core.config import settings
-from app.utils import send_new_account_email
+from app.core.config import configuracoes
+from app.utils import enviar_email_nova_conta
 
 router = APIRouter()
 
 
-@router.get("/", response_model=List[schemas.User])
-def read_users(
-    db: Session = Depends(deps.get_db),
-    skip: int = 0,
-    limit: int = 100,
-    _: models.User = Depends(deps.get_current_active_superuser),
+@router.get("/", response_model=List[schemas.Usuario])
+def listar_usuarios(
+    db: Session = Depends(deps.obter_db),
+    pular: int = 0,
+    limite: int = 100,
+    _: models.Usuario = Depends(deps.obter_superusuario_atual),
 ) -> Any:
-    """List all users.
+    """Lista todos os usuários.
 
     Args:
-        db (Session, optional): The database session. Defaults to Depends(deps.get_db).
-        skip (int, optional): The number of records to skip. Defaults to 0.
-        limit (int, optional): The number of records to return. Defaults to 100.
-        _ (models.User, optional): The current user. Defaults to Depends(deps.get_current_active_superuser).
+        db (Session, optional): A sessão do banco de dados. Padrão é Depends(deps.obter_db).
+        pular (int, optional): O número de registros a pular. Padrão é 0.
+        limite (int, optional): O número de registros a retornar. Padrão é 100.
+        _ (models.Usuario, optional): O usuário atual. Padrão é Depends(deps.obter_superusuario_atual).
 
     Raises:
-        HTTPException: Unable to validate credentials.
+        HTTPException: Não foi possível validar as credenciais.
 
     Returns:
-        Any: The list of users.
+        Any: A lista de usuários.
     """
-    users = crud.user.get_multi(db, skip=skip, limit=limit)
-    return users
+    usuarios = crud.usuario.obter_multiplos(db, skip=pular, limit=limite)
+    return usuarios
 
 
-@router.post("/", response_model=schemas.User)
-def create_user(
+@router.post("/", response_model=schemas.Usuario)
+def criar_usuario(
     *,
-    db: Session = Depends(deps.get_db),
-    user_in: schemas.UserCreate,
-    _: models.User = Depends(deps.get_current_active_superuser),
+    db: Session = Depends(deps.obter_db),
+    usuario_in: schemas.CriarUsuario,
+    _: models.Usuario = Depends(deps.obter_superusuario_atual),
 ) -> Any:
-    """Create a new user.
+    """Criar um novo usuário.
 
     Args:
-        user_in (schemas.UserCreate): The user data.
-        db (Session, optional): The database session. Defaults to Depends(deps.get_db).
-        _ (models.User, optional): The current user. Defaults to Depends(deps.get_current_active_superuser).
+        usuario_in (schemas.CriarUsuario): Os dados do usuário.
+        db (Session, optional): A sessão do banco de dados. Padrão é Depends(deps.obter_db).
+        _ (models.Usuario, optional): O usuário atual. Padrão é Depends(deps.obter_superusuario_atual).
 
     Raises:
-        HTTPException: Unable to validate credentials.
+        HTTPException: Não foi possível validar as credenciais.
 
     Returns:
-        Any: The new user.
+        Any: O novo usuário.
     """
-    user = crud.user.get_by_email(db, email=user_in.email)
-    if user:
+    usuario = crud.usuario.obter_por_email(db, email=usuario_in.email)
+    if usuario:
         raise HTTPException(
             status_code=400,
-            detail="The user with this username already exists in the system.",
+            detail="O usuário com este nome de usuário já existe no sistema.",
         )
-    user = crud.user.create(db, obj_in=user_in)
-    if settings.EMAILS_ENABLED and user_in.email:
-        send_new_account_email(
-            email_to=user_in.email,
-            username=user_in.email,
-            password=user_in.password,
+    usuario = crud.usuario.criar(db, obj_in=usuario_in)
+    if configuracoes.EMAILS_HABILITADOS and usuario_in.email:
+        enviar_email_nova_conta(
+            email_para=usuario_in.email,
+            nome_usuario=usuario_in.email,
+            senha=usuario_in.senha,
         )
-    return user
+    return usuario
 
 
-@router.put("/me", response_model=schemas.User)
-def update_user_me(
+@router.put("/eu", response_model=schemas.Usuario)
+def atualizar_usuario_eu(
     *,
-    db: Session = Depends(deps.get_db),
-    first_name: str = Body(None),
-    last_name: str = Body(None),
+    db: Session = Depends(deps.obter_db),
+    primeiro_nome: str = Body(None),
+    sobrenome: str = Body(None),
     cpf: str = Body(None),
-    phone: str = Body(None),
-    password: str = Body(None),
+    telefone: str = Body(None),
+    senha: str = Body(None),
     email: EmailStr = Body(None),
-    current_user: models.User = Depends(deps.get_current_active_user),
+    usuario_atual: models.Usuario = Depends(deps.obter_usuario_ativo_atual),
 ) -> Any:
-    """Update the current user.
+    """Atualizar o usuário atual.
 
     Args:
-        db (Session, optional): The database session. Defaults to Depends(deps.get_db).
-        first_name (str, optional): The first name. Defaults to Body(None).
-        last_name (str, optional): The last name. Defaults to Body(None).
-        cpf (str, optional): The CPF. Defaults to Body(None).
-        phone (str, optional): The phone number. Defaults to Body(None).
-        password (str, optional): The password. Defaults to Body(None).
-        email (EmailStr, optional): The email. Defaults to Body(None).
-        current_user (models.User, optional): The current user. Defaults to Depends(deps.get_current_active_user).
+        db (Session, optional): A sessão do banco de dados. Padrão é Depends(deps.obter_db).
+        primeiro_nome (str, optional): O primeiro nome. Padrão é Body(None).
+        sobrenome (str, optional): O sobrenome. Padrão é Body(None).
+        cpf (str, optional): O CPF. Padrão é Body(None).
+        telefone (str, optional): O número de telefone. Padrão é Body(None).
+        senha (str, optional): A senha. Padrão é Body(None).
+        email (EmailStr, optional): O email. Padrão é Body(None).
+        usuario_atual (models.Usuario, optional): O usuário atual. Padrão é Depends(deps.obter_usuario_ativo_atual).
 
     Raises:
-        HTTPException: Unable to validate credentials.
+        HTTPException: Não foi possível validar as credenciais.
 
     Returns:
-        Any: The updated user.
+        Any: O usuário atualizado.
     """
-    current_user_data = jsonable_encoder(current_user)
-    user_in = schemas.UserUpdate(**current_user_data)
+    dados_usuario_atual = jsonable_encoder(usuario_atual)
+    usuario_in = schemas.AtualizarUsuario(**dados_usuario_atual)
 
-    if first_name is not None:
-        user_in.first_name = first_name
-    if last_name is not None:
-        user_in.last_name = last_name
+    if primeiro_nome is not None:
+        usuario_in.primeiro_nome = primeiro_nome
+    if sobrenome is not None:
+        usuario_in.sobrenome = sobrenome
     if cpf is not None:
-        user_in.cpf = cpf
+        usuario_in.cpf = cpf
     if email is not None:
-        user_in.email = email
-    if phone is not None:
-        user_in.phone = phone
-    if password is not None:
-        user_in.password = password
+        usuario_in.email = email
+    if telefone is not None:
+        usuario_in.telefone = telefone
+    if senha is not None:
+        usuario_in.senha = senha
 
-    user = crud.user.update(db, db_obj=current_user, obj_in=user_in)
-    return user
+    usuario = crud.usuario.atualizar(db, db_obj=usuario_atual, obj_in=usuario_in)
+    return usuario
 
 
-@router.get("/me", response_model=schemas.User)
-def read_user_me(
-    db: Session = Depends(deps.get_db),
-    current_user: models.User = Depends(deps.get_current_active_user),
+@router.get("/eu", response_model=schemas.Usuario)
+def ler_usuario_eu(
+    db: Session = Depends(deps.obter_db),
+    usuario_atual: models.Usuario = Depends(deps.obter_usuario_ativo_atual),
 ) -> Any:
-    """Get the current user.
+    """Obter o usuário atual.
 
     Args:
-        db (Session, optional): The database session. Defaults to Depends(deps.get_db).
-        current_user (models.User, optional): The current user. Defaults to Depends(deps.get_current_active_user).
+        db (Session, optional): A sessão do banco de dados. Padrão é Depends(deps.obter_db).
+        usuario_atual (models.Usuario, optional): O usuário atual. Padrão é Depends(deps.obter_usuario_ativo_atual).
 
     Raises:
-        HTTPException: Unable to validate credentials.
+        HTTPException: Não foi possível validar as credenciais.
 
     Returns:
-        Any: The current user.
+        Any: O usuário atual.
     """
-    return current_user
+    return usuario_atual
 
 
-@router.post("/open", response_model=schemas.User)
-def create_user_open(
+@router.post("/aberto", response_model=schemas.Usuario)
+def criar_usuario_aberto(
     *,
-    db: Session = Depends(deps.get_db),
-    first_name: str = Body(None),
-    last_name: str = Body(None),
+    db: Session = Depends(deps.obter_db),
+    primeiro_nome: str = Body(None),
+    sobrenome: str = Body(None),
     cpf: str = Body(...),
     email: EmailStr = Body(...),
-    phone: str = Body(...),
-    password: str = Body(...),
+    telefone: str = Body(...),
+    senha: str = Body(...),
 ) -> Any:
-    """Create a new user without the need to be logged in.
+    """Criar um novo usuário sem a necessidade de estar logado.
 
     Args:
-        db (Session, optional): The database session. Defaults to Depends(deps.get_db).
-        first_name (str, optional): The full name. Defaults to Body(...).
-        last_name (str, optional): The last name. Defaults to Body(...).
-        cpf (str, optional): The CPF. Defaults to Body(...).
-        email (EmailStr, optional): The email. Defaults to Body(...).
-        phone (str, optional): The phone number. Defaults to Body(...).
-        password (str, optional): The password. Defaults to Body(...).
+        db (Session, optional): A sessão do banco de dados. Padrão é Depends(deps.obter_db).
+        primeiro_nome (str, optional): O nome completo. Padrão é Body(...).
+        sobrenome (str, optional): O sobrenome. Padrão é Body(...).
+        cpf (str, optional): O CPF. Padrão é Body(...).
+        email (EmailStr, optional): O email. Padrão é Body(...).
+        telefone (str, optional): O número de telefone. Padrão é Body(...).
+        senha (str, optional): A senha. Padrão é Body(...).
 
     Raises:
-        HTTPException: Open user registration is prohibited on this server.
+        HTTPException: O registro aberto de usuários é proibido neste servidor.
 
     Returns:
-        Any: The new user.
+        Any: O novo usuário.
     """
-    if not settings.USERS_OPEN_REGISTRATION:
+    if not configuracoes.REGISTRO_USUARIOS_ABERTO:
         raise HTTPException(
             status_code=403,
-            detail="Open user registration is prohibited on this server.",
+            detail="O registro aberto de usuários é proibido neste servidor.",
         )
-    user = crud.user.get_by_email(db, email=email)
-    if user:
+    usuario = crud.usuario.obter_por_email(db, email=email)
+    if usuario:
         raise HTTPException(
             status_code=400,
-            detail="The user with this username already exists in the system.",
+            detail="O usuário com este nome de usuário já existe no sistema.",
         )
-    user_in = schemas.UserCreate(
-        first_name=first_name,
-        last_name=last_name,
+    usuario_in = schemas.CriarUsuario(
+        primeiro_nome=primeiro_nome,
+        sobrenome=sobrenome,
         cpf=cpf,
         email=email,
-        phone=phone,
-        permission=models.UserPermissionEnum.USER.value,
-        password=password,
+        telefone=telefone,
+        permissao=models.EnumPermissaoUsuario.USUARIO.value,
+        senha=senha,
     )
-    user = crud.user.create(db, obj_in=user_in)
-    return user
+    usuario = crud.usuario.criar(db, obj_in=usuario_in)
+    return usuario
 
 
-@router.get("/{user_id}", response_model=schemas.User)
-def read_user_by_id(
-    user_id: int,
-    current_user: models.User = Depends(deps.get_current_active_user),
-    db: Session = Depends(deps.get_db),
+@router.get("/{id_usuario}", response_model=schemas.Usuario)
+def ler_usuario_por_id(
+    id_usuario: int,
+    usuario_atual: models.Usuario = Depends(deps.obter_usuario_ativo_atual),
+    db: Session = Depends(deps.obter_db),
 ) -> Any:
-    """Get a specific user by ID.
+    """Obter um usuário específico por ID.
 
     Args:
-        user_id (int): The user ID.
-        current_user (models.User, optional): The current user. Defaults to Depends(deps.get_current_active_user).
-        db (Session, optional): The database session. Defaults to Depends(deps.get_db).
+        id_usuario (int): O ID do usuário.
+        usuario_atual (models.Usuario, optional): O usuário atual. Padrão é Depends(deps.obter_usuario_ativo_atual).
+        db (Session, optional): A sessão do banco de dados. Padrão é Depends(deps.obter_db).
 
     Raises:
-        HTTPException: The user does not have sufficient privileges.
+        HTTPException: O usuário não tem privilégios suficientes.
 
     Returns:
-        Any: The user.
+        Any: O usuário.
     """
-    user = crud.user.get(db, id=user_id)
-    if user == current_user:
-        return user
-    if not crud.user.is_superuser(current_user):
+    usuario = crud.usuario.obter(db, id=id_usuario)
+    if usuario == usuario_atual:
+        return usuario
+    if not crud.usuario.eh_superusuario(usuario_atual):
         raise HTTPException(
             status_code=400,
-            detail="The user does not have sufficient privileges.",
+            detail="O usuário não tem privilégios suficientes.",
         )
-    return user
+    return usuario
 
 
-@router.put("/{user_id}", response_model=schemas.User)
-def update_user(
+@router.put("/{id_usuario}", response_model=schemas.Usuario)
+def atualizar_usuario(
     *,
-    db: Session = Depends(deps.get_db),
-    user_id: int,
-    user_in: schemas.UserUpdate,
-    _: models.User = Depends(deps.get_current_active_superuser),
+    db: Session = Depends(deps.obter_db),
+    id_usuario: int,
+    usuario_in: schemas.AtualizarUsuario,
+    _: models.Usuario = Depends(deps.obter_superusuario_atual),
 ) -> Any:
-    """Update a user.
+    """Atualizar um usuário.
 
     Args:
-        user_id (int): The user ID.
-        user_in (schemas.UserUpdate): The user data.
-        db (Session, optional): The database session. Defaults to Depends(deps.get_db).
-        _ (models.User, optional): The current user. Defaults to Depends(deps.get_current_active_superuser).
+        id_usuario (int): O ID do usuário.
+        usuario_in (schemas.AtualizarUsuario): Os dados do usuário.
+        db (Session, optional): A sessão do banco de dados. Padrão é Depends(deps.obter_db).
+        _ (models.Usuario, optional): O usuário atual. Padrão é Depends(deps.obter_superusuario_atual).
 
     Raises:
-        HTTPException: Unable to validate credentials.
+        HTTPException: Não foi possível validar as credenciais.
 
     Returns:
-        Any: The updated user.
+        Any: O usuário atualizado.
     """
-    user = crud.user.get(db, id=user_id)
-    if not user:
+    usuario = crud.usuario.obter(db, id=id_usuario)
+    if not usuario:
         raise HTTPException(
             status_code=404,
-            detail="The user with this username does not exist in the system.",
+            detail="O usuário com este nome de usuário não existe no sistema.",
         )
-    user = crud.user.update(db, db_obj=user, obj_in=user_in)
-    return user
+    usuario = crud.usuario.atualizar(db, db_obj=usuario, obj_in=usuario_in)
+    return usuario

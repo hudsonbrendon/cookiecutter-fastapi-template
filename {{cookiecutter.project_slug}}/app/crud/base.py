@@ -6,68 +6,68 @@ from sqlalchemy.orm import Session
 
 from app.db.base_class import Base
 
-ModelType = TypeVar("ModelType", bound=Base)
-CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
-UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
+TipoModelo = TypeVar("TipoModelo", bound=Base)
+TipoEsquemaCriacao = TypeVar("TipoEsquemaCriacao", bound=BaseModel)
+TipoEsquemaAtualizacao = TypeVar("TipoEsquemaAtualizacao", bound=BaseModel)
 
 
-class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
-    """The CRUD object with default methods to Create, Read, Update, Delete (CRUD) objects.
+class CRUDBase(Generic[TipoModelo, TipoEsquemaCriacao, TipoEsquemaAtualizacao]):
+    """O objeto CRUD com métodos padrão para Criar, Ler, Atualizar, Excluir (CRUD) objetos.
 
     Args:
-        Generic (_type_): The generic type.
+        Generic (_type_): O tipo genérico.
 
     Returns:
-        _type_: The CRUD object.
+        _type_: O objeto CRUD.
     """
 
-    def __init__(self, model: Type[ModelType]):
-        """Initialize the CRUD object.
+    def __init__(self, model: Type[TipoModelo]):
+        """Inicializa o objeto CRUD.
 
         Args:
-            model (Type[ModelType]): The model.
+            model (Type[TipoModelo]): O modelo.
 
         Returns:
-            _type_: The CRUD object.
+            _type_: O objeto CRUD.
         """
         self.model = model
 
-    def get(self, db: Session, id: Any) -> Optional[ModelType]:
-        """Get an object by ID.
+    def obter(self, db: Session, id: Any) -> Optional[TipoModelo]:
+        """Obter um objeto por ID.
 
         Args:
-            db (Session): The database session.
-            id (Any): The object ID.
+            db (Session): A sessão do banco de dados.
+            id (Any): O ID do objeto.
 
         Returns:
-            Optional[ModelType]: The object.
+            Optional[TipoModelo]: O objeto.
         """
         return db.query(self.model).filter(self.model.id == id).first()
 
-    def get_multi(
+    def obter_multiplos(
         self, db: Session, *, skip: int = 0, limit: int = 100
-    ) -> List[ModelType]:
-        """Get all objects.
+    ) -> List[TipoModelo]:
+        """Obter todos os objetos.
 
         Args:
-            db (Session): The database session.
-            skip (int, optional): The number of records to skip. Defaults to 0.
-            limit (int, optional): The number of records to return. Defaults to 100.
+            db (Session): A sessão do banco de dados.
+            skip (int, optional): O número de registros a pular. Padrão é 0.
+            limit (int, optional): O número de registros a retornar. Padrão é 100.
 
         Returns:
-            List[ModelType]: The list of objects.
+            List[TipoModelo]: A lista de objetos.
         """
         return db.query(self.model).offset(skip).limit(limit).all()
 
-    def create(self, db: Session, *, obj_in: CreateSchemaType) -> ModelType:
-        """Create a new object.
+    def criar(self, db: Session, *, obj_in: TipoEsquemaCriacao) -> TipoModelo:
+        """Criar um novo objeto.
 
         Args:
-            db (Session): The database session.
-            obj_in (CreateSchemaType): The object data.
+            db (Session): A sessão do banco de dados.
+            obj_in (TipoEsquemaCriacao): Os dados do objeto.
 
         Returns:
-            ModelType: The new object.
+            TipoModelo: O novo objeto.
         """
         obj_in_data = jsonable_encoder(obj_in)
         db_obj = self.model(**obj_in_data)
@@ -76,22 +76,22 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         db.refresh(db_obj)
         return db_obj
 
-    def update(
+    def atualizar(
         self,
         db: Session,
         *,
-        db_obj: ModelType,
-        obj_in: Union[UpdateSchemaType, Dict[str, Any]],
-    ) -> ModelType:
-        """Update an object.
+        db_obj: TipoModelo,
+        obj_in: Union[TipoEsquemaAtualizacao, Dict[str, Any]],
+    ) -> TipoModelo:
+        """Atualizar um objeto.
 
         Args:
-            db (Session): The database session.
-            db_obj (ModelType): The object.
-            obj_in (Union[UpdateSchemaType, Dict[str, Any]]): The object data.
+            db (Session): A sessão do banco de dados.
+            db_obj (TipoModelo): O objeto.
+            obj_in (Union[TipoEsquemaAtualizacao, Dict[str, Any]]): Os dados do objeto.
 
         Returns:
-            ModelType: The updated object.
+            TipoModelo: O objeto atualizado.
         """
         obj_data = jsonable_encoder(db_obj)
         if isinstance(obj_in, dict):
@@ -106,15 +106,15 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         db.refresh(db_obj)
         return db_obj
 
-    def remove(self, db: Session, *, id: int) -> ModelType:
-        """Remove an object.
+    def remover(self, db: Session, *, id: int) -> TipoModelo:
+        """Remover um objeto.
 
         Args:
-            db (Session): The database session.
-            id (int): The object ID.
+            db (Session): A sessão do banco de dados.
+            id (int): O ID do objeto.
 
         Returns:
-            ModelType: The removed object.
+            TipoModelo: O objeto removido.
         """
         obj = db.get(self.model, id)
         db.delete(obj)

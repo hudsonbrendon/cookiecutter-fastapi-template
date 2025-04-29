@@ -5,24 +5,24 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app import crud
-from app.core.config import settings
-from app.core.enums import UserPermissionEnum
-from app.db.session import SessionLocal
+from app.core.config import configuracoes
+from app.core.enums import EnumPermissaoUsuario
+from app.db.session import SessaoLocal
 from app.main import app
-from app.models.user import User
-from app.schemas.user import UserCreate
-from app.tests.utils.user import authentication_token_from_email
+from app.models.user import Usuario
+from app.schemas.user import CriarUsuario
+from app.tests.utils.user import token_autenticacao_do_email
 from app.tests.utils.utils import (
-    get_superuser_token_headers,
-    random_cpf,
-    random_email,
-    random_phone,
+    cpf_aleatorio,
+    email_aleatorio,
+    obter_cabecalhos_token_superusuario,
+    telefone_aleatorio,
 )
 
 
 @pytest.fixture(scope="session")
 def db() -> Generator:
-    yield SessionLocal()
+    yield SessaoLocal()
 
 
 @pytest.fixture(scope="module")
@@ -32,51 +32,53 @@ def client() -> Generator:
 
 
 @pytest.fixture(scope="module")
-def superuser_token_headers(client: TestClient) -> Dict[str, str]:
-    return get_superuser_token_headers(client)
+def cabecalhos_token_superusuario(client: TestClient) -> Dict[str, str]:
+    return obter_cabecalhos_token_superusuario(client)
 
 
 @pytest.fixture(scope="module")
-def normal_user_token_headers(client: TestClient, db: Session) -> Dict[str, str]:
-    return authentication_token_from_email(
+def cabecalhos_token_usuario_normal(client: TestClient, db: Session) -> Dict[str, str]:
+    return token_autenticacao_do_email(
         client=client,
-        email=settings.EMAIL_TEST_USER,
-        phone=settings.PHONE_TEST_USER,
-        cpf=settings.CPF_TEST_USER,
+        email=configuracoes.EMAIL_USUARIO_TESTE,
+        telefone=configuracoes.TELEFONE_USUARIO_TESTE,
+        cpf=configuracoes.CPF_USUARIO_TESTE,
         db=db,
     )
 
 
 @pytest.fixture(scope="module")
-def random_user_token_headers(client: TestClient, db: Session) -> Dict[str, str]:
-    return authentication_token_from_email(
+def cabecalhos_token_usuario_aleatorio(
+    client: TestClient, db: Session
+) -> Dict[str, str]:
+    return token_autenticacao_do_email(
         client=client,
-        email=random_email(),
-        phone=random_phone(),
-        cpf=random_cpf(),
+        email=email_aleatorio(),
+        telefone=telefone_aleatorio(),
+        cpf=cpf_aleatorio(),
         db=db,
     )
 
 
 @pytest.fixture(scope="module")
-def user_inactive_token_headers(client: TestClient, db: Session) -> Dict[str, str]:
-    return authentication_token_from_email(
+def cabecalhos_token_usuario_inativo(client: TestClient, db: Session) -> Dict[str, str]:
+    return token_autenticacao_do_email(
         client=client,
-        email=random_email(),
-        phone=random_phone(),
-        cpf=random_cpf(),
-        is_active=False,
+        email=email_aleatorio(),
+        telefone=telefone_aleatorio(),
+        cpf=cpf_aleatorio(),
+        esta_ativo=False,
         db=db,
     )
 
 
 @pytest.fixture
-def db_user(db: Session) -> User:
-    user_in = UserCreate(
-        email=random_email(),
-        phone=random_phone(),
-        cpf=random_cpf(),
-        permission=UserPermissionEnum.USER.value,
-        password="test@123",
+def db_usuario(db: Session) -> Usuario:
+    usuario_in = CriarUsuario(
+        email=email_aleatorio(),
+        telefone=telefone_aleatorio(),
+        cpf=cpf_aleatorio(),
+        permissao=EnumPermissaoUsuario.USUARIO.value,
+        senha="test@123",
     )
-    return crud.user.create(db, obj_in=user_in)
+    return crud.usuario.criar(db, obj_in=usuario_in)

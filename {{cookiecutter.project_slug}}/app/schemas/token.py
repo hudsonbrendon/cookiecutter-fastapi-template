@@ -4,9 +4,9 @@ from pydantic import BaseModel
 
 
 class Token(BaseModel):
-    access_token: str
-    token_type: str
+    token_acesso: str
+    tipo_token: str
 
 
-class TokenPayload(BaseModel):
+class CargaToken(BaseModel):
     sub: Optional[int] = None

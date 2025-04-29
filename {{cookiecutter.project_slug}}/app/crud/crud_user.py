@@ -3,137 +3,141 @@ from typing import Any, Dict, Optional, Union
 from pydantic import EmailStr
 from sqlalchemy.orm import Session
 
-from app.core.security import get_password_hash, verify_password
+from app.core.security import obter_hash_senha, verificar_senha
 from app.crud.base import CRUDBase
-from app.models.user import User
-from app.schemas.user import UserCreate, UserUpdate
+from app.models.user import Usuario
+from app.schemas.user import AtualizarUsuario, CriarUsuario
 
 
-class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
-    """The CRUD for User model.
+class CRUDUsuario(CRUDBase[Usuario, CriarUsuario, AtualizarUsuario]):
+    """O CRUD para o modelo de Usuário.
 
     Args:
-        CRUDBase (_type_): The base CRUD.
+        CRUDBase (_type_): O CRUD base.
 
     Returns:
-        _type_: The CRUD for User model.
+        _type_: O CRUD para o modelo de Usuário.
     """
 
     @staticmethod
-    def get_by_email(db: Session, *, email: EmailStr) -> Optional[User]:
-        """Filter by email.
+    def obter_por_email(db: Session, *, email: EmailStr) -> Optional[Usuario]:
+        """Filtrar por e-mail.
 
         Args:
-            db (Session): The database session.
-            email (EmailStr): The email.
+            db (Session): A sessão do banco de dados.
+            email (EmailStr): O e-mail.
 
         Returns:
-            Optional[User]: The user.
+            Optional[Usuario]: O usuário.
         """
-        return db.query(User).filter(User.email == email).first()
+        return db.query(Usuario).filter(Usuario.email == email).first()
 
     @staticmethod
-    def get_by_cpf(db: Session, *, cpf: str) -> Optional[User]:
-        """Filter by CPF.
+    def obter_por_cpf(db: Session, *, cpf: str) -> Optional[Usuario]:
+        """Filtrar por CPF.
 
         Args:
-            db (Session): The database session.
-            cpf (str): The CPF.
+            db (Session): A sessão do banco de dados.
+            cpf (str): O CPF.
 
         Returns:
-            Optional[User]: The user.
+            Optional[Usuario]: O usuário.
         """
-        return db.query(User).filter(User.cpf == cpf).first()
+        return db.query(Usuario).filter(Usuario.cpf == cpf).first()
 
-    def create(self, db: Session, *, obj_in: UserCreate) -> User:
+    def criar(self, db: Session, *, obj_in: CriarUsuario) -> Usuario:
         """Criar usuário.
 
         Args:
-            db (Session): The database session.
-            obj_in (UserCreate): The user creation model.
+            db (Session): A sessão do banco de dados.
+            obj_in (CriarUsuario): O modelo de criação de usuário.
 
         Returns:
-            User: The user.
+            Usuario: O usuário.
         """
-        db_obj = User(
-            first_name=obj_in.first_name,
-            last_name=obj_in.last_name,
+        db_obj = Usuario(
+            primeiro_nome=obj_in.primeiro_nome,
+            sobrenome=obj_in.sobrenome,
             cpf=obj_in.cpf,
             email=obj_in.email,
-            phone=obj_in.phone,
-            permission=obj_in.permission,
-            hashed_password=get_password_hash(obj_in.password),
-            is_superuser=obj_in.is_superuser,
+            telefone=obj_in.telefone,
+            permissao=obj_in.permissao,
+            senha_criptografada=obter_hash_senha(obj_in.senha),
+            eh_superusuario=obj_in.eh_superusuario,
         )
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
         return db_obj
 
-    def update(
-        self, db: Session, *, db_obj: User, obj_in: Union[UserUpdate, Dict[str, Any]]
-    ) -> User:
-        """Update user.
+    def atualizar(
+        self,
+        db: Session,
+        *,
+        db_obj: Usuario,
+        obj_in: Union[AtualizarUsuario, Dict[str, Any]],
+    ) -> Usuario:
+        """Atualizar usuário.
 
         Args:
-            db (Session): The database session.
-            db_obj (User): The user.
-            obj_in (Union[UserUpdate, Dict[str, Any]]): The user update model.
+            db (Session): A sessão do banco de dados.
+            db_obj (Usuario): O usuário.
+            obj_in (Union[AtualizarUsuario, Dict[str, Any]]): O modelo de atualização de usuário.
 
         Returns:
-            User: The user.
+            Usuario: O usuário.
         """
         if isinstance(obj_in, dict):
             update_data = obj_in
         else:
             update_data = obj_in.model_dump(exclude_unset=True)
-        if update_data["password"]:
-            hashed_password = get_password_hash(update_data["password"])
-            del update_data["password"]
-            update_data["hashed_password"] = hashed_password
-        return super().update(db, db_obj=db_obj, obj_in=update_data)
+        if update_data["senha"]:
+            senha_criptografada = obter_hash_senha(update_data["senha"])
+            del update_data["senha"]
+            update_data["senha_criptografada"] = senha_criptografada
+        return super().atualizar(db, db_obj=db_obj, obj_in=update_data)
 
-    def authenticate(self, db: Session, *, email: str, password: str) -> Optional[User]:
-        """Authenticate user.
+    def autenticar(self, db: Session, *, email: str, senha: str) -> Optional[Usuario]:
+        """Autenticar usuário.
 
         Args:
-            db (Session): The database session.
-            email (str): The email.
-            password (str): The password.
+            db (Session): A sessão do banco de dados.
+            email (str): O e-mail.
+            senha (str): A senha.
 
         Returns:
-            Optional[User]: The user.
+            Optional[Usuario]: O usuário.
         """
-        user = self.get_by_email(db, email=email)
-        if not user:
+        usuario = self.obter_por_email(db, email=email)
+        if not usuario:
             return None
-        if not verify_password(password, user.hashed_password):
+        if not verificar_senha(senha, usuario.senha_criptografada):
             return None
-        return user
+        return usuario
 
     @staticmethod
-    def is_active(user: User) -> bool:
-        """Verify if the user is active.
+    def esta_ativo(usuario: Usuario) -> bool:
+        """Verifica se o usuário está ativo.
 
         Args:
-            user (User): The user.
+            usuario (Usuario): O usuário.
 
         Returns:
-            bool: The user is active.
+            bool: O usuário está ativo.
         """
-        return user.is_active
+        return usuario.esta_ativo
 
     @staticmethod
-    def is_superuser(user: User) -> bool:
-        """Verify if the user is superuser.
+    def eh_superusuario(usuario: Usuario) -> bool:
+        """Verifica se o usuário é superusuário.
 
         Args:
-            user (User): The user.
+            usuario (Usuario): O usuário.
 
         Returns:
-            bool: The user is superuser.
+            bool: O usuário é superusuário.
         """
-        return user.is_superuser
+        return usuario.eh_superusuario
 
 
-user = CRUDUser(User)
+usuario = CRUDUsuario(Usuario)

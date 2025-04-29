@@ -8,102 +8,102 @@ from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
 from app.core import security
-from app.core.config import settings
-from app.db.session import SessionLocal
+from app.core.config import configuracoes
+from app.db.session import SessaoLocal
 
-reusable_oauth2 = OAuth2PasswordBearer(
-    tokenUrl=f"{settings.API_V1_STR}/login/access-token"
+oauth2_reutilizavel = OAuth2PasswordBearer(
+    tokenUrl=f"{configuracoes.API_V1_STR}/login/token-acesso"
 )
 
 
-def get_db() -> Generator:
-    """Get the database session.
+def obter_db() -> Generator:
+    """Obtém a sessão do banco de dados.
 
     Raises:
-        HTTPException: Unable to validate credentials.
+        HTTPException: Não foi possível validar as credenciais.
 
     Returns:
-        _type_: The database session.
+        _type_: A sessão do banco de dados.
 
     Yields:
-        Generator: The database session.
+        Generator: A sessão do banco de dados.
     """
     db: Session = None
     try:
-        db = SessionLocal()
+        db = SessaoLocal()
         yield db
     finally:
         if db:
             db.close()
 
 
-def get_current_user(
-    db: Session = Depends(get_db), token: str = Depends(reusable_oauth2)
-) -> models.User:
-    """Get the current user.
+def obter_usuario_atual(
+    db: Session = Depends(obter_db), token: str = Depends(oauth2_reutilizavel)
+) -> models.Usuario:
+    """Obtém o usuário atual.
 
     Args:
-        db (Session, optional): The database session. Defaults to Depends(get_db).
-        token (str, optional): The token. Defaults to Depends(reusable_oauth2).
+        db (Session, optional): A sessão do banco de dados. Padrão é Depends(obter_db).
+        token (str, optional): O token. Padrão é Depends(oauth2_reutilizavel).
 
     Raises:
-        HTTPException: Unable to validate credentials.
+        HTTPException: Não foi possível validar as credenciais.
 
     Returns:
-        models.User: The current user.
+        models.Usuario: O usuário atual.
     """
     try:
         payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]
+            token, configuracoes.CHAVE_SECRETA, algorithms=[security.ALGORITMO]
         )
-        token_data = schemas.TokenPayload(**payload)
+        dados_token = schemas.CargaToken(**payload)
     except (jwt.JWTError, ValidationError):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Unable to validate credentials.",
+            detail="Não foi possível validar as credenciais.",
         )
-    user = crud.user.get(db, id=token_data.sub)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found.")
-    return user
+    usuario = crud.usuario.obter(db, id=dados_token.sub)
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+    return usuario
 
 
-def get_current_active_user(
-    current_user: models.User = Depends(get_current_user),
-) -> models.User:
-    """Get the current active user.
-
-    Args:
-        current_user (models.User, optional): The user authenticated. Defaults to Depends(get_current_user).
-
-    Raises:
-        HTTPException: The user is not active.
-
-    Returns:
-        models.User: The current active user.
-    """
-    if not crud.user.is_active(current_user):
-        raise HTTPException(status_code=400, detail="Inactive user.")
-    return current_user
-
-
-def get_current_active_superuser(
-    current_user: models.User = Depends(get_current_active_user),
-) -> models.User:
-    """Get the current superuser.
+def obter_usuario_ativo_atual(
+    usuario_atual: models.Usuario = Depends(obter_usuario_atual),
+) -> models.Usuario:
+    """Obtém o usuário ativo atual.
 
     Args:
-        current_user (models.User, optional): The user authenticated. Defaults to Depends(get_current_active_user).
+        usuario_atual (models.Usuario, optional): O usuário autenticado. Padrão é Depends(obter_usuario_atual).
 
     Raises:
-        HTTPException: The user does not have sufficient privileges.
+        HTTPException: O usuário não está ativo.
 
     Returns:
-        models.User: The current superuser.
+        models.Usuario: O usuário ativo atual.
     """
-    if not crud.user.is_superuser(current_user):
+    if not crud.usuario.esta_ativo(usuario_atual):
+        raise HTTPException(status_code=400, detail="Usuário inativo.")
+    return usuario_atual
+
+
+def obter_superusuario_atual(
+    usuario_atual: models.Usuario = Depends(obter_usuario_ativo_atual),
+) -> models.Usuario:
+    """Obtém o superusuário atual.
+
+    Args:
+        usuario_atual (models.Usuario, optional): O usuário autenticado. Padrão é Depends(obter_usuario_ativo_atual).
+
+    Raises:
+        HTTPException: O usuário não tem privilégios suficientes.
+
+    Returns:
+        models.Usuario: O superusuário atual.
+    """
+    if not crud.usuario.eh_superusuario(usuario_atual):
         raise HTTPException(
             status_code=400,
-            detail="The user does not have sufficient privileges.",
+            detail="O usuário não tem privilégios suficientes.",
         )
-    return current_user
+    return usuario_atual

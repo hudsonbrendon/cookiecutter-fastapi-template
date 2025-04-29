@@ -4,57 +4,59 @@ from typing import Any, Union
 from jose import jwt
 from passlib.context import CryptContext
 
-from app.core.config import settings
+from app.core.config import configuracoes
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-
-ALGORITHM = "HS256"
+contexto_senha = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-def create_access_token(
-    subject: Union[str, Any], expires_delta: timedelta = None
+ALGORITMO = "HS256"
+
+
+def criar_token_acesso(
+    assunto: Union[str, Any], delta_expiracao: timedelta = None
 ) -> str:
-    """Create an access token.
+    """Cria um token de acesso.
 
     Args:
-        subject (Union[str, Any]): The subject.
-        expires_delta (timedelta, optional): The expiration time. Defaults to None.
+        assunto (Union[str, Any]): O assunto.
+        delta_expiracao (timedelta, optional): O tempo de expiração. Padrão é None.
 
     Returns:
-        str: The access token.
+        str: O token de acesso.
     """
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+    if delta_expiracao:
+        expira = datetime.utcnow() + delta_expiracao
     else:
-        expire = datetime.utcnow() + timedelta(
-            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
+        expira = datetime.utcnow() + timedelta(
+            minutes=configuracoes.MINUTOS_EXPIRACAO_TOKEN_ACESSO
         )
-    to_encode = {"exp": expire, "sub": str(subject)}
-    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
+    para_codificar = {"exp": expira, "sub": str(assunto)}
+    jwt_codificado = jwt.encode(
+        para_codificar, configuracoes.CHAVE_SECRETA, algorithm=ALGORITMO
+    )
+    return jwt_codificado
 
 
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify the password.
-
-    Args:
-        plain_password (str): The plain password.
-        hashed_password (str): The hashed password.
-
-    Returns:
-        bool: True if the password is valid.
-    """
-    return pwd_context.verify(plain_password, hashed_password)
-
-
-def get_password_hash(password: str) -> str:
-    """Get the password hash.
+def verificar_senha(senha_texto: str, senha_hash: str) -> bool:
+    """Verifica a senha.
 
     Args:
-        password (str): The password.
+        senha_texto (str): A senha em texto plano.
+        senha_hash (str): A senha criptografada.
 
     Returns:
-        str: The password hash.
+        bool: True se a senha for válida.
     """
-    return pwd_context.hash(password)
+    return contexto_senha.verify(senha_texto, senha_hash)
+
+
+def obter_hash_senha(senha: str) -> str:
+    """Obtém o hash da senha.
+
+    Args:
+        senha (str): A senha.
+
+    Returns:
+        str: O hash da senha.
+    """
+    return contexto_senha.hash(senha)

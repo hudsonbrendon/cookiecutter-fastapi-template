@@ -1,10 +1,10 @@
 services:
   api:
-    container_name: {{cookiecutter.project_slug}}_api_dev
+    container_name: teste_api_dev
     build:
       context: .
       dockerfile: Dockerfile.dev
-    image: {{cookiecutter.project_slug}}_api_dev
+    image: teste_api_dev
 
     ports:
       - "4000:80"
@@ -16,7 +16,7 @@ services:
     command: /bin/bash -c "/app/pre-start.sh && uv run uvicorn app.main:app --host 0.0.0.0 --port 80 --reload"
 
   postgres:
-    container_name: {{cookiecutter.project_slug}}_postgresql_dev
+    container_name: teste_postgresql_dev
     image: postgres:16
 
     ports:
@@ -24,13 +24,15 @@ services:
     volumes:
       - ./pre-start-db-test.sql:/docker-entrypoint-initdb.d/pre-start-db-test.sql
       - postgres_data:/var/lib/postgresql/data/pgdata
-    env_file:
-      - .env
     environment:
       - PGDATA=/var/lib/postgresql/data/pgdata
+      - POSTGRES_USER=${USUARIO_POSTGRES}
+      - POSTGRES_PASSWORD=${SENHA_POSTGRES}
+      - POSTGRES_DB=${BD_POSTGRES}
+      - BD_POSTGRES_TESTE=${BD_POSTGRES_TESTE}
 
   redis:
-    container_name: {{cookiecutter.project_slug}}_redis_dev
+    container_name: teste_redis_dev
     image: redis:latest
     ports:
       - "6379:6379"

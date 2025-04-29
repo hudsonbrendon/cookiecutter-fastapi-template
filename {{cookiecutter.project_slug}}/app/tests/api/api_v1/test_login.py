@@ -5,208 +5,214 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app import crud
-from app.core.config import settings
-from app.models.user import User
-from app.utils import verify_password_reset_token
+from app.core.config import configuracoes
+from app.models.user import Usuario
+from app.utils import verificar_token_redefinicao_senha
 
 
 class TestLogin:
-    def test_get_access_token_wrong_password(self, client: TestClient) -> None:
-        login_data = {
-            "username": settings.FIRST_SUPERUSER,
-            "password": "wrongpassword",
+    def test_obter_token_acesso_senha_incorreta(self, client: TestClient) -> None:
+        dados_login = {
+            "username": configuracoes.PRIMEIRO_SUPERUSUARIO,
+            "password": "senhaincorreta",
         }
-        r = client.post(f"{settings.API_V1_STR}/login/access-token", data=login_data)
+        r = client.post(
+            f"{configuracoes.API_V1_STR}/login/token-acesso", data=dados_login
+        )
         assert r.status_code == 400
-        assert "Invalid username or password." in r.text
+        assert "Nome de usuário ou senha inválidos." in r.text
 
-    def test_get_access_token(self, client: TestClient) -> None:
-        login_data = {
-            "username": settings.FIRST_SUPERUSER,
-            "password": settings.FIRST_SUPERUSER_PASSWORD,
+    def test_obter_token_acesso(self, client: TestClient) -> None:
+        dados_login = {
+            "username": configuracoes.PRIMEIRO_SUPERUSUARIO,
+            "password": configuracoes.SENHA_PRIMEIRO_SUPERUSUARIO,
         }
-        r = client.post(f"{settings.API_V1_STR}/login/access-token", data=login_data)
+        r = client.post(
+            f"{configuracoes.API_V1_STR}/login/token-acesso", data=dados_login
+        )
         tokens = r.json()
         assert r.status_code == 200
-        assert "access_token" in tokens
-        assert tokens["access_token"]
+        assert "token_acesso" in tokens
+        assert tokens["token_acesso"]
 
-    def test_get_access_token_user_inative(
-        self, db: Session, client: TestClient, db_user: User
+    def test_obter_token_acesso_usuario_inativo(
+        self, db: Session, client: TestClient, db_usuario: Usuario
     ) -> None:
-        db_user.is_active = False
-        user_in = jsonable_encoder(db_user)
-        db.query(User).filter(User.id == db_user.id).update(user_in)
+        db_usuario.esta_ativo = False
+        usuario_in = jsonable_encoder(db_usuario)
+        db.query(Usuario).filter(Usuario.id == db_usuario.id).update(usuario_in)
         db.commit()
 
-        login_data = {
-            "username": db_user.email,
+        dados_login = {
+            "username": db_usuario.email,
             "password": "test@123",
         }
-        r = client.post(f"{settings.API_V1_STR}/login/access-token", data=login_data)
+        r = client.post(
+            f"{configuracoes.API_V1_STR}/login/token-acesso", data=dados_login
+        )
         assert r.status_code == 400
-        assert r.json()["detail"] == "Inactive user."
+        assert r.json()["detail"] == "Usuário inativo."
 
 
-class TestUserMe:
-    def test_user_me_superuser(
-        self, client: TestClient, superuser_token_headers: Dict[str, str]
+class TestUsuarioEu:
+    def test_usuario_eu_superusuario(
+        self, client: TestClient, cabecalhos_token_superusuario: Dict[str, str]
     ) -> None:
         r = client.get(
-            f"{settings.API_V1_STR}/users/me",
-            headers=superuser_token_headers,
+            f"{configuracoes.API_V1_STR}/usuarios/eu",
+            headers=cabecalhos_token_superusuario,
         )
-        current_user = r.json()
-        assert current_user
-        assert current_user["is_active"] is True
-        assert current_user["is_superuser"]
-        assert current_user["email"] == settings.FIRST_SUPERUSER
+        usuario_atual = r.json()
+        assert usuario_atual
+        assert usuario_atual["esta_ativo"] is True
+        assert usuario_atual["eh_superusuario"]
+        assert usuario_atual["email"] == configuracoes.PRIMEIRO_SUPERUSUARIO
 
-    def test_user_me_normal_user(
+    def test_usuario_eu_usuario_normal(
         self,
         client: TestClient,
-        normal_user_token_headers: Dict[str, str],
+        cabecalhos_token_usuario_normal: Dict[str, str],
     ) -> None:
         r = client.get(
-            f"{settings.API_V1_STR}/users/me",
-            headers=normal_user_token_headers,
+            f"{configuracoes.API_V1_STR}/usuarios/eu",
+            headers=cabecalhos_token_usuario_normal,
         )
-        current_user = r.json()
-        assert current_user
-        assert current_user["is_active"] is True
-        assert not current_user["is_superuser"]
-        assert current_user["email"] == settings.EMAIL_TEST_USER
+        usuario_atual = r.json()
+        assert usuario_atual
+        assert usuario_atual["esta_ativo"] is True
+        assert not usuario_atual["eh_superusuario"]
+        assert usuario_atual["email"] == configuracoes.EMAIL_USUARIO_TESTE
 
 
-class TestResetPassword:
-    def test_reset_password_success(
+class TestRedefinirSenha:
+    def test_redefinir_senha_sucesso(
         self,
         client: TestClient,
-        normal_user_token_headers: Dict[str, str],
+        cabecalhos_token_usuario_normal: Dict[str, str],
     ) -> None:
-        data = {
-            "token": normal_user_token_headers["Authorization"].split(" ")[1],
-            "old_password": "test@123",
-            "new_password": "test@123",
+        dados = {
+            "token": cabecalhos_token_usuario_normal["Authorization"].split(" ")[1],
+            "senha_antiga": "test@123",
+            "senha_nova": "test@123",
         }
         r = client.post(
-            f"{settings.API_V1_STR}/reset-password/",
-            json=data,
+            f"{configuracoes.API_V1_STR}/redefinir-senha/",
+            json=dados,
         )
         assert r.status_code == 200
-        assert r.json()["msg"] == "Password changed successfully."
+        assert r.json()["msg"] == "Senha alterada com sucesso."
 
-    def test_reset_password_with_invalid_password(
+    def test_redefinir_senha_com_senha_invalida(
         self,
         client: TestClient,
-        normal_user_token_headers: Dict[str, str],
+        cabecalhos_token_usuario_normal: Dict[str, str],
     ) -> None:
-        data = {
-            "token": normal_user_token_headers["Authorization"].split(" ")[1],
-            "old_password": "test@test",
-            "new_password": "test@123",
+        dados = {
+            "token": cabecalhos_token_usuario_normal["Authorization"].split(" ")[1],
+            "senha_antiga": "test@test",
+            "senha_nova": "test@123",
         }
         r = client.post(
-            f"{settings.API_V1_STR}/reset-password/",
-            json=data,
+            f"{configuracoes.API_V1_STR}/redefinir-senha/",
+            json=dados,
         )
         assert r.status_code == 400
-        assert r.json()["detail"] == "Current password is invalid."
+        assert r.json()["detail"] == "A senha atual é inválida."
 
-    def test_reset_password_with_invalid_token(
+    def test_redefinir_senha_com_token_invalido(
         self,
         client: TestClient,
     ) -> None:
-        data = {
-            "token": "invalid_token",
-            "old_password": "test@123",
-            "new_password": "test@123",
+        dados = {
+            "token": "token_invalido",
+            "senha_antiga": "test@123",
+            "senha_nova": "test@123",
         }
         r = client.post(
-            f"{settings.API_V1_STR}/reset-password/",
-            json=data,
+            f"{configuracoes.API_V1_STR}/redefinir-senha/",
+            json=dados,
         )
         assert r.status_code == 400
-        assert r.json()["detail"] == "Invalid token."
+        assert r.json()["detail"] == "Token inválido."
 
-    def test_reset_password_user_not_found(
+    def test_redefinir_senha_usuario_nao_encontrado(
         self,
         db: Session,
         client: TestClient,
-        normal_user_token_headers: Dict[str, str],
+        cabecalhos_token_usuario_normal: Dict[str, str],
     ) -> None:
-        token = normal_user_token_headers["Authorization"].split(" ")[1]
+        token = cabecalhos_token_usuario_normal["Authorization"].split(" ")[1]
 
-        user_id = verify_password_reset_token(token)
+        id_usuario = verificar_token_redefinicao_senha(token)
 
-        crud.user.remove(db, id=user_id)
+        crud.usuario.remover(db, id=id_usuario)
 
-        data = {
+        dados = {
             "token": token,
-            "old_password": "test@123",
-            "new_password": "test@123",
+            "senha_antiga": "test@123",
+            "senha_nova": "test@123",
         }
         r = client.post(
-            f"{settings.API_V1_STR}/reset-password/",
-            json=data,
+            f"{configuracoes.API_V1_STR}/redefinir-senha/",
+            json=dados,
         )
         assert r.status_code == 404
-        assert r.json()["detail"] == "User not found."
+        assert r.json()["detail"] == "Usuário não encontrado."
 
 
-class TestCreatePassword:
-    def test_create_password_success(
+class TestCriarSenha:
+    def test_criar_senha_sucesso(
         self,
         client: TestClient,
         db: Session,
-        random_user_token_headers: Dict[str, str],
+        cabecalhos_token_usuario_aleatorio: Dict[str, str],
     ) -> None:
-        token = random_user_token_headers["Authorization"].split(" ")[1]
-        data = {
+        token = cabecalhos_token_usuario_aleatorio["Authorization"].split(" ")[1]
+        dados = {
             "token": token,
-            "new_password": "test@123",
+            "senha_nova": "test@123",
         }
         r = client.post(
-            f"{settings.API_V1_STR}/create-password/",
-            json=data,
+            f"{configuracoes.API_V1_STR}/criar-senha/",
+            json=dados,
         )
         assert r.status_code == 200
-        assert r.json()["msg"] == "Password created successfully."
+        assert r.json()["msg"] == "Senha criada com sucesso."
 
-    def test_create_password_with_invalid_token(
+    def test_criar_senha_com_token_invalido(
         self,
         client: TestClient,
     ) -> None:
-        data = {
-            "token": "invalid_token",
-            "new_password": "test@123",
+        dados = {
+            "token": "token_invalido",
+            "senha_nova": "test@123",
         }
         r = client.post(
-            f"{settings.API_V1_STR}/create-password/",
-            json=data,
+            f"{configuracoes.API_V1_STR}/criar-senha/",
+            json=dados,
         )
         assert r.status_code == 400
-        assert r.json()["detail"] == "Invalid token."
+        assert r.json()["detail"] == "Token inválido."
 
-    def test_create_password_user_not_found(
+    def test_criar_senha_usuario_nao_encontrado(
         self,
         db: Session,
         client: TestClient,
-        random_user_token_headers: Dict[str, str],
+        cabecalhos_token_usuario_aleatorio: Dict[str, str],
     ) -> None:
-        token = random_user_token_headers["Authorization"].split(" ")[1]
+        token = cabecalhos_token_usuario_aleatorio["Authorization"].split(" ")[1]
 
-        user_id = verify_password_reset_token(token)
+        id_usuario = verificar_token_redefinicao_senha(token)
 
-        crud.user.remove(db, id=user_id)
+        crud.usuario.remover(db, id=id_usuario)
 
-        data = {
+        dados = {
             "token": token,
-            "new_password": "test@123",
+            "senha_nova": "test@123",
         }
         r = client.post(
-            f"{settings.API_V1_STR}/create-password/",
-            json=data,
+            f"{configuracoes.API_V1_STR}/criar-senha/",
+            json=dados,
         )
         assert r.status_code == 404
-        assert r.json()["detail"] == "User not found."
+        assert r.json()["detail"] == "Usuário não encontrado."

@@ -6,10 +6,10 @@ from sqlalchemy.orm import as_declarative
 
 @as_declarative()
 class Base:
-    """Base class for SQLAlchemy model.
+    """Classe base para o modelo SQLAlchemy.
 
     Returns:
-        _type_: The base class for SQLAlchemy model.
+        _type_: A classe base para o modelo SQLAlchemy.
     """
 
     id: Any
@@ -17,9 +17,9 @@ class Base:
 
     @declared_attr
     def __tablename__(cls) -> str:
-        """Get the table name.
+        """Obtém o nome da tabela.
 
         Returns:
-            str: The table name.
+            str: O nome da tabela.
         """
         return cls.__name__.lower()

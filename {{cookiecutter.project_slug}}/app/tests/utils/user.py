@@ -4,69 +4,73 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app import crud
-from app.core.config import settings
-from app.core.enums import UserPermissionEnum
-from app.models.user import User
-from app.schemas.user import UserCreate, UserUpdate
-from app.tests.utils.utils import random_cpf, random_email, random_lower_string
+from app.core.config import configuracoes
+from app.core.enums import EnumPermissaoUsuario
+from app.models.user import Usuario
+from app.schemas.user import AtualizarUsuario, CriarUsuario
+from app.tests.utils.utils import (
+    cpf_aleatorio,
+    email_aleatorio,
+    texto_aleatorio_minusculo,
+)
 
 
-def user_authentication_headers(
-    *, client: TestClient, email: str, cpf: str, password: str
+def cabecalhos_autenticacao_usuario(
+    *, client: TestClient, email: str, cpf: str, senha: str
 ) -> Dict[str, str]:
-    data = {"username": email, "cpf": cpf, "password": password}
-    r = client.post(f"{settings.API_V1_STR}/login/access-token", data=data)
-    response = r.json()
-    auth_token = response["access_token"]
-    headers = {"Authorization": f"Bearer {auth_token}"}
-    return headers
+    dados = {"username": email, "cpf": cpf, "password": senha}
+    r = client.post(f"{configuracoes.API_V1_STR}/login/token-acesso", data=dados)
+    resposta = r.json()
+    token_auth = resposta["token_acesso"]
+    cabecalhos = {"Authorization": f"Bearer {token_auth}"}
+    return cabecalhos
 
 
-def create_random_user(db: Session) -> User:
-    email = random_email()
-    cpf = random_cpf()
-    password = random_lower_string()
-    user_in = UserCreate(
+def criar_usuario_aleatorio(db: Session) -> Usuario:
+    email = email_aleatorio()
+    cpf = cpf_aleatorio()
+    senha = texto_aleatorio_minusculo()
+    usuario_in = CriarUsuario(
         username=email,
         email=email,
         cpf=cpf,
-        permission=UserPermissionEnum.USER.value,
-        password=password,
+        permissao=EnumPermissaoUsuario.USUARIO.value,
+        senha=senha,
     )
-    user = crud.user.create(db=db, obj_in=user_in)
-    return user
+    usuario = crud.usuario.criar(db=db, obj_in=usuario_in)
+    return usuario
 
 
-def authentication_token_from_email(
+def token_autenticacao_do_email(
     *,
     client: TestClient,
     email: str,
-    phone: str,
+    telefone: str,
     cpf: str,
     db: Session,
-    is_active: bool = True,
+    esta_ativo: bool = True,
 ) -> Dict[str, str]:
     """
-    Retorne um token válido para o usuário com determinado email.
+    Retorna um token válido para o usuário com determinado email.
 
     Se o usuário não existir, ele será criado primeiro.
     """
-    password = "test@123"
-    user = crud.user.get_by_email(db, email=email)
-    if not user:
-        user_in_create = UserCreate(
+    senha = "test@123"
+    usuario = crud.usuario.obter_por_email(db, email=email)
+    if not usuario:
+        usuario_in_criacao = CriarUsuario(
             email=email,
             cpf=cpf,
-            phone=phone,
-            permission=UserPermissionEnum.USER.value,
-            password=password,
-            is_active=is_active,
+            telefone=telefone,
+            permissao=EnumPermissaoUsuario.USUARIO.value,
+            senha=senha,
+            esta_ativo=esta_ativo,
         )
-        crud.user.create(db, obj_in=user_in_create)
+        crud.usuario.criar(db, obj_in=usuario_in_criacao)
     else:
-        user_in_update = UserUpdate(password=password)
-        crud.user.update(db, db_obj=user, obj_in=user_in_update)
+        usuario_in_atualizacao = AtualizarUsuario(senha=senha)
+        crud.usuario.atualizar(db, db_obj=usuario, obj_in=usuario_in_atualizacao)
 
-    return user_authentication_headers(
-        client=client, email=email, cpf=cpf, password=password
+    return cabecalhos_autenticacao_usuario(
+        client=client, email=email, cpf=cpf, senha=senha
     )

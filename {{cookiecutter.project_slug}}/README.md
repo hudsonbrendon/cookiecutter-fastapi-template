@@ -67,7 +67,7 @@ docker-compose -f docker-compose.dev.yml exec api pytest
 
 ```
 
-If you want to run the tests directly in the vscode interface, in your .env, set the variable **POSTGRES_SERVER** with the value _localhost_
+If you want to run the tests directly in the vscode interface, in your .env, set the variable **SERVIDOR_POSTGRES** with the value _localhost_
 
 This way, with the virtual environment activated, it is also possible to run the tests directly in the terminal with the command:
 
@@ -130,7 +130,7 @@ To backup, restore and clean the database in the container, use the following co
 Backup
 
 ```bash
-PGPASSWORD=${POSTGRES_PASSWORD} pg_dump -h localhost -U ${POSTGRES_USER}  ${POSTGRES_DB} > backup.sql
+PGPASSWORD=${SENHA_POSTGRES} pg_dump -h localhost -U ${USUARIO_POSTGRES}  ${BD_POSTGRES} > backup.sql
 
 ```
 
@@ -139,7 +139,7 @@ PGPASSWORD=${POSTGRES_PASSWORD} pg_dump -h localhost -U ${POSTGRES_USER}  ${POST
 Restore
 
 ```bash
-PGPASSWORD=${POSTGRES_PASSWORD} psql -h localhost  -U ${POSTGRES_USER}  ${POSTGRES_DB} < backup.sql
+PGPASSWORD=${SENHA_POSTGRES} psql -h localhost  -U ${USUARIO_POSTGRES}  ${BD_POSTGRES} < backup.sql
 
 ```
 - If you get a duplicate key error, reset the database.
@@ -147,7 +147,7 @@ PGPASSWORD=${POSTGRES_PASSWORD} psql -h localhost  -U ${POSTGRES_USER}  ${POSTGR
 Clear the Database
 
 ```bash
-PGPASSWORD=${POSTGRES_PASSWORD} psql -h localhost -U ${POSTGRES_USER}  -d ${POSTGRES_DB} -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+PGPASSWORD=${SENHA_POSTGRES} psql -h localhost -U ${USUARIO_POSTGRES}  -d ${BD_POSTGRES} -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
 
 ```
 
