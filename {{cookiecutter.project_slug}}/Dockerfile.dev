@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 WORKDIR /app
 ENV PYTHONPATH=/app
@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY pyproject.toml /app/pyproject.toml
 
 RUN pip install uv
-RUN uv python install 3.11
+RUN uv python install 3.12
 RUN uv sync
 
 COPY . /app
